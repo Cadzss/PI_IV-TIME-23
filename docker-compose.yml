@@ -1,0 +1,14 @@
+# MongoDB para desenvolvimento (opcional).
+# Para quem tem Docker e nao quer instalar o MongoDB:  docker compose up -d
+services:
+  mongo:
+    image: mongo:7
+    container_name: early-warning-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-dados:/data/db
+    restart: unless-stopped
+
+volumes:
+  mongo-dados:
