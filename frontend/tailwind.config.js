@@ -5,6 +5,7 @@ export default {
     extend: {
       colors: {
         marinho: '#1F3864',
+        destaque: '#2F6F6A',
         risco: { alto: '#C00000', medio: '#E36C09', baixo: '#538135' },
       },
     },
