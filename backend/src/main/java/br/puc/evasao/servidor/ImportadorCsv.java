@@ -2,6 +2,8 @@ package br.puc.evasao.servidor;
 
 import org.bson.Document;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -14,7 +16,7 @@ import java.util.Map;
  *   matricula,nome,turma,data,frequencia,nota
  *   2026001,João P.,8ºA,2026-08-01,80,6.5
  *
- * - data: AAAA-MM-DD (período de referência do registro)
+ * - data: AAAA-MM-DD, e a data precisa existir no calendário
  * - frequencia: porcentagem de 0 a 100
  * - nota: 0 a 10 (aceita vírgula decimal: 6,5)
  * - nomes com vírgula precisam ir entre aspas: "Silva, João"
@@ -95,12 +97,9 @@ public class ImportadorCsv {
         if (nota < 0 || nota > 10) {
             throw new IllegalArgumentException("nota fora de 0 a 10: " + nota);
         }
-        if (!data.matches("\\d{4}-\\d{2}-\\d{2}")) {
-            throw new IllegalArgumentException("data inválida (use AAAA-MM-DD): " + data);
-        }
-        int mes = Integer.parseInt(data.substring(5, 7));
-        int dia = Integer.parseInt(data.substring(8, 10));
-        if (mes < 1 || mes > 12 || dia < 1 || dia > 31) {
+        try {
+            LocalDate.parse(data);
+        } catch (DateTimeParseException e) {
             throw new IllegalArgumentException("data inválida (use AAAA-MM-DD): " + data);
         }
     }

@@ -70,6 +70,24 @@ class ImportadorCsvTest {
     }
 
     @Test
+    void rejeitaDiaQueNaoExisteEAceita29DeFevereiroEmAnoBissexto() {
+        ImportadorCsv.Analise fevereiro = ImportadorCsv.analisar(
+                CABECALHO + "2026001,Ana,8ºA,2026-02-31,80,6\n");
+        assertEquals(0, fevereiro.registros);
+        assertTrue(fevereiro.erros.get(0).contains("data"));
+
+        ImportadorCsv.Analise abril = ImportadorCsv.analisar(
+                CABECALHO + "2026001,Ana,8ºA,2026-04-31,80,6\n");
+        assertEquals(0, abril.registros);
+        assertTrue(abril.erros.get(0).contains("data"));
+
+        ImportadorCsv.Analise bissexto = ImportadorCsv.analisar(
+                CABECALHO + "2026001,Ana,8ºA,2024-02-29,80,6\n");
+        assertEquals(1, bissexto.registros);
+        assertTrue(bissexto.erros.isEmpty());
+    }
+
+    @Test
     void exigeColunasDoCabecalho() {
         IllegalArgumentException erro = assertThrows(IllegalArgumentException.class,
                 () -> ImportadorCsv.analisar("matricula,nome\n1,Ana\n"));
