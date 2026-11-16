@@ -10,13 +10,16 @@ React (navegador) --HTTP--> PonteHttp (Java, cliente Socket) --Socket TCP--> Ser
 ```
 
 - **backend/** (Java 11 + Maven)
-  - `protocolo/Protocolo` — formato das mensagens trocadas via Socket (1 linha JSON por mensagem)
-  - `servidor/Servidor` — `ServerSocket` que atende cada cliente em uma thread (`AtendenteCliente`)
-  - `servidor/ProcessadorPedidos` — executa cada ação do protocolo
+  - `protocolo/` — o que viaja pelo Socket, no padrão do Fazedor de Continhas: `Comunicado` (serializável), `PedidoDeOperacao`, `PedidoDeResultado`, `Resultado`, `PedidoParaSair`, `ComunicadoDeDesligamento` e o `Parceiro` (`receba`, `envie`, `espie`, `adeus`) sobre `ObjectOutputStream` / `ObjectInputStream`
+  - `servidor/Servidor` — sobe a `AceitadoraDeConexao` e lê o comando `desativar` no console
+  - `servidor/AceitadoraDeConexao` — thread do `ServerSocket`; cada cliente ganha uma `SupervisoraDeConexao`
+  - `servidor/SupervisoraDeConexao` — thread que recebe os pedidos de um cliente e devolve o `Resultado`
+  - `servidor/ProcessadorPedidos` — executa cada operação (LISTAR_ALUNOS, IMPORTAR_CSV...)
   - `servidor/CalculadoraRisco` — regra do score de risco (ALTO / MÉDIO / BAIXO)
   - `servidor/AlunoRepositorio`, `AlertaRepositorio` — acesso ao MongoDB
   - `servidor/ImportadorCsv` — importação da planilha de frequência e notas
-  - `ponte/ClienteSocket` + `ponte/PonteHttp` — cliente Socket Java exposto em HTTP para o React
+  - `ponte/Cliente` + `ponte/TratadoraDeComunicadoDeDesligamento` — cliente Socket Java com a conexão aberta; encerra quando o servidor manda o desligamento
+  - `ponte/PonteHttp` — expõe o `Cliente` em HTTP para o React
 - **frontend/** (React + Vite + Tailwind + Recharts) — Dashboard, Detalhe do aluno, Alertas, Importar planilha
 
 O navegador não consegue abrir Sockets TCP diretamente, por isso a **PonteHttp** existe:
@@ -104,6 +107,8 @@ Quando o aluno entra em ALTO, o sistema prepara um e-mail para o coordenador. Se
 | `SMTP_SENHA` | senha |
 
 ## Ações do protocolo
+
+O cliente manda um `PedidoDeOperacao` com a ação e os dados, depois um `PedidoDeResultado`; o servidor responde com um `Resultado`. Para desligar o servidor, digite `desativar` no terminal dele (rodando manualmente).
 
 | Ação | Dados | Retorno |
 |---|---|---|

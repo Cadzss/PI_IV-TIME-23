@@ -2,28 +2,18 @@ package br.puc.evasao.protocolo;
 
 import org.bson.Document;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.PrintWriter;
-
 /**
- * Protocolo de comunicação entre cliente e servidor via Socket.
+ * Operações aceitas pelo servidor e o formato do Resultado.
  *
- * Cada mensagem é UMA linha de texto contendo um JSON.
+ * Pelo Socket viajam objetos Comunicado (ObjectOutputStream / ObjectInputStream):
+ *   cliente -> servidor: PedidoDeOperacao, depois PedidoDeResultado
+ *   servidor -> cliente: Resultado
+ *   PedidoParaSair encerra a conexão; ComunicadoDeDesligamento avisa que o servidor vai desligar.
  *
- * Pedido (cliente -> servidor):   {"acao": "LISTAR_ALUNOS", "dados": { ... }}
- * Resposta (servidor -> cliente): {"ok": true,  "dados": ...}
- *                                 {"ok": false, "erro": "mensagem"}
- *
- * OBS: este formato é provisório. Quando o padrão do professor for definido,
- * basta ajustar esta classe (e as classes que a usam) para segui-lo.
+ * O valor do Resultado é um JSON: {"ok": true, "dados": ...} ou {"ok": false, "erro": "mensagem"}.
  */
 public final class Protocolo {
 
-    public static final String HOST_PADRAO = "localhost";
-    public static final int PORTA_PADRAO = 12345;
-
-    // Ações aceitas pelo servidor
     public static final String LISTAR_ALUNOS = "LISTAR_ALUNOS";
     public static final String DETALHAR_ALUNO = "DETALHAR_ALUNO";
     public static final String LISTAR_TURMAS = "LISTAR_TURMAS";
@@ -45,19 +35,5 @@ public final class Protocolo {
 
     public static Document erro(String mensagem) {
         return new Document("ok", false).append("erro", mensagem);
-    }
-
-    public static void enviar(PrintWriter saida, Document mensagem) {
-        saida.println(mensagem.toJson());
-        saida.flush();
-    }
-
-    /** Lê a próxima mensagem; retorna null se a conexão foi encerrada. */
-    public static Document receber(BufferedReader entrada) throws IOException {
-        String linha = entrada.readLine();
-        if (linha == null) {
-            return null;
-        }
-        return Document.parse(linha);
     }
 }
