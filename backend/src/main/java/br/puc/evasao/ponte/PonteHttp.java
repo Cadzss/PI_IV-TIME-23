@@ -15,9 +15,9 @@ import java.util.concurrent.Executors;
  * Ponte entre o navegador e o servidor.
  *
  * O navegador (React) não consegue abrir um Socket TCP direto, então ele faz um POST HTTP
- * para esta ponte, que age como CLIENTE Socket Java e repassa o pedido ao Servidor.
+ * para esta ponte, que usa o Cliente Socket Java para repassar o pedido ao Servidor.
  *
- *   React --HTTP--> PonteHttp (cliente Socket) --Socket--> Servidor --> MongoDB
+ *   React --HTTP--> PonteHttp --> Cliente --Socket--> Servidor --> MongoDB
  *
  * Endpoint único: POST /api/comando   corpo: {"acao": "...", "dados": {...}}
  */
@@ -25,7 +25,17 @@ public class PonteHttp {
 
     public static void main(String[] args) throws IOException {
         int portaHttp = args.length > 0 ? Integer.parseInt(args[0]) : 8080;
-        ClienteSocket cliente = new ClienteSocket(Protocolo.HOST_PADRAO, Protocolo.PORTA_PADRAO);
+
+        Cliente cliente;
+        try {
+            cliente = new Cliente(Cliente.HOST_PADRAO, Cliente.PORTA_PADRAO);
+        } catch (Exception e) {
+            System.err.println("[Ponte] " + e.getMessage() + " (Servidor em "
+                    + Cliente.HOST_PADRAO + ":" + Cliente.PORTA_PADRAO + ")");
+            System.exit(1);
+            return;
+        }
+        Runtime.getRuntime().addShutdownHook(new Thread(cliente::sair));
 
         HttpServer http = HttpServer.create(new InetSocketAddress(portaHttp), 0);
         http.setExecutor(Executors.newFixedThreadPool(8));
@@ -33,10 +43,10 @@ public class PonteHttp {
         http.start();
 
         System.out.println("[Ponte] HTTP em http://localhost:" + portaHttp + "/api/comando -> Socket "
-                + Protocolo.HOST_PADRAO + ":" + Protocolo.PORTA_PADRAO);
+                + Cliente.HOST_PADRAO + ":" + Cliente.PORTA_PADRAO);
     }
 
-    private static void atender(HttpExchange troca, ClienteSocket cliente) throws IOException {
+    private static void atender(HttpExchange troca, Cliente cliente) throws IOException {
         troca.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
         troca.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
         troca.getResponseHeaders().add("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -51,15 +61,19 @@ public class PonteHttp {
             return;
         }
 
+        Document requisicao;
         try {
             String corpo = new String(troca.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
-            Document requisicao = Document.parse(corpo);
-            Document pedido = Protocolo.pedido(requisicao.getString("acao"), requisicao.get("dados", Document.class));
-            responder(troca, 200, cliente.enviar(pedido));
-        } catch (IOException e) {
-            responder(troca, 502, Protocolo.erro("Servidor Socket indisponível: " + e.getMessage()));
+            requisicao = Document.parse(corpo);
         } catch (RuntimeException e) {
             responder(troca, 400, Protocolo.erro("Requisição inválida: " + e.getMessage()));
+            return;
+        }
+
+        try {
+            responder(troca, 200, cliente.peca(requisicao.getString("acao"), requisicao.get("dados", Document.class)));
+        } catch (Exception e) {
+            responder(troca, 502, Protocolo.erro("Servidor Socket indisponível: " + e.getMessage()));
         }
     }
 
