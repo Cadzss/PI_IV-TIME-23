@@ -15,7 +15,7 @@ import BadgeRisco from '../components/BadgeRisco.jsx'
 import { Carregando, Erro } from '../components/Estado.jsx'
 
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
-const COR_LINHA = '#1F3864'
+const COR_LINHA = '#1C3144'
 
 function rotuloMes(data) {
   const [ano, mes] = data.split('-')

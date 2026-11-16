@@ -4,9 +4,15 @@ export default {
   theme: {
     extend: {
       colors: {
-        marinho: '#1F3864',
-        destaque: '#2F6F6A',
-        risco: { alto: '#C00000', medio: '#E36C09', baixo: '#538135' },
+        papel: '#F4F1EB',
+        marinho: '#1C3144',
+        destaque: '#C46B4A',
+        risco: {
+          alto: '#C23B3B',
+          medio: '#C9841A',
+          baixo: '#2E8B6A',
+          alerta: '#FDECEA',
+        },
       },
     },
   },
