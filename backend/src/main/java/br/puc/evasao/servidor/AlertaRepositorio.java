@@ -46,7 +46,7 @@ public class AlertaRepositorio {
             titulo = nome + " (" + turma + ") mudou de risco " + rotulo(nivelAnterior) + " para " + rotulo(nivelNovo);
         }
 
-        alertas.insertOne(new Document("tipo", tipo)
+        Document documento = new Document("tipo", tipo)
                 .append("matricula", aluno.getString("matricula"))
                 .append("nomeAluno", nome)
                 .append("turma", turma)
@@ -54,9 +54,41 @@ public class AlertaRepositorio {
                 .append("nivelNovo", nivelNovo)
                 .append("titulo", titulo)
                 .append("lido", false)
-                .append("criadoEm", new Date()));
+                .append("criadoEm", new Date());
 
-        // TODO (MVP): enviar e-mail ao coordenador quando nivelNovo == ALTO (SMTP).
+        if (NOVO_RISCO_ALTO.equals(tipo)) {
+            documento.append("email", new NotificadorEmail().notificar(titulo, montarCorpo(aluno, nivelAnterior)));
+        }
+        alertas.insertOne(documento);
+    }
+
+    private static String montarCorpo(Document aluno, String nivelAnterior) {
+        StringBuilder texto = new StringBuilder();
+        texto.append("Aluno: ").append(aluno.getString("nome"))
+                .append(" (").append(aluno.getString("turma")).append(")\n");
+        texto.append("Matrícula: ").append(aluno.getString("matricula")).append('\n');
+        texto.append("Nível anterior: ")
+                .append(nivelAnterior == null ? "novo aluno" : rotulo(nivelAnterior)).append('\n');
+        texto.append("Nível atual: ALTO\n");
+
+        Document risco = aluno.get("risco", Document.class);
+        if (risco != null) {
+            List<String> sinais = risco.getList("sinais", String.class, new ArrayList<>());
+            if (!sinais.isEmpty()) {
+                texto.append("\nSinais:\n");
+                for (String sinal : sinais) {
+                    texto.append("- ").append(sinal).append('\n');
+                }
+            }
+            List<String> acoes = risco.getList("acoes", String.class, new ArrayList<>());
+            if (!acoes.isEmpty()) {
+                texto.append("\nAções recomendadas:\n");
+                for (String acao : acoes) {
+                    texto.append("- ").append(acao).append('\n');
+                }
+            }
+        }
+        return texto.toString();
     }
 
     public List<Document> listar() {

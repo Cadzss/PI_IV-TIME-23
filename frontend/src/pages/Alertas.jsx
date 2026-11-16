@@ -54,6 +54,16 @@ export default function Alertas() {
                     ver aluno
                   </Link>
                 </p>
+                {a.email && (
+                  <p className="mt-1 text-xs text-slate-600">
+                    E-mail para {a.email.destino}
+                    {a.email.status === 'enviado'
+                      ? ' enviado ao coordenador.'
+                      : a.email.status === 'falha'
+                        ? `: falha no envio (${a.email.motivo}).`
+                        : ' registrado neste alerta. Defina SMTP_HOST para o envio real.'}
+                  </p>
+                )}
               </div>
               {!a.lido && (
                 <button onClick={() => marcarLido(a.id)} className="text-xs text-slate-500 hover:text-slate-800">

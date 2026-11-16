@@ -80,6 +80,29 @@ npm run dev
   Para usar outro endereço (ex.: MongoDB Atlas), defina a variável `MONGO_URI`.
 - **Porta em uso (12345, 8080 ou 5173)**: feche a execução anterior e rode de novo.
 
+### Testes
+
+Na pasta `backend`, sem MongoDB e sem o servidor ligados:
+
+```bash
+./mvnw test
+```
+
+Os testes JUnit cobrem a regra do score e a leitura da planilha, inclusive data que não existe no calendário.
+
+### E-mail de risco alto
+
+Quando o aluno entra em ALTO, o sistema prepara um e-mail para o coordenador. Sem SMTP configurado, a mensagem não sai da máquina: a cópia fica em `logs/emails.log` e o alerta aparece com status `copia_local`.
+
+| Variável | Função |
+|---|---|
+| `EMAIL_COORDENADOR` | quem recebe (padrão `coordenador@escola.local`) |
+| `EMAIL_REMETENTE` | quem envia |
+| `SMTP_HOST` | servidor SMTP. Sem ele, só grava a cópia local |
+| `SMTP_PORT` | porta (padrão 587) |
+| `SMTP_USUARIO` | usuário, se o servidor pedir senha |
+| `SMTP_SENHA` | senha |
+
 ## Ações do protocolo
 
 | Ação | Dados | Retorno |
@@ -111,4 +134,5 @@ npm run dev
 matricula,nome,turma,data,frequencia,nota
 2026001,João P.,8ºA,2026-11-01,62,5.2
 ```
-Exemplo completo em `backend/dados/exemplo.csv`.
+
+A data precisa existir. `2026-02-31` e `2026-04-31` são recusados; `2024-02-29` entra porque 2024 é bissexto. Exemplo completo em `backend/dados/exemplo.csv`.

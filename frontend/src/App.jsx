@@ -13,7 +13,7 @@ const links = [
 export default function App() {
   return (
     <div className="min-h-screen">
-      <header className="bg-marinho text-white">
+      <header className="border-b-4 border-destaque bg-marinho text-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <span className="text-lg font-bold">Early-Warning Evasão</span>
           <nav className="flex gap-1 text-sm">
@@ -23,7 +23,7 @@ export default function App() {
                 to={l.to}
                 end
                 className={({ isActive }) =>
-                  `rounded px-3 py-1.5 ${isActive ? 'bg-white/20 font-semibold' : 'hover:bg-white/10'}`
+                  `rounded px-3 py-1.5 ${isActive ? 'bg-destaque font-semibold' : 'hover:bg-white/10'}`
                 }
               >
                 {l.rotulo}

@@ -9,7 +9,9 @@ const EXEMPLO = `matricula,nome,turma,data,frequencia,nota
 export default function Importar() {
   const [arquivo, setArquivo] = useState(null)
   const [enviando, setEnviando] = useState(false)
+  const [recalculando, setRecalculando] = useState(false)
   const [resultado, setResultado] = useState(null)
+  const [recalculo, setRecalculo] = useState(null)
   const [erro, setErro] = useState(null)
 
   async function importar(e) {
@@ -28,6 +30,19 @@ export default function Importar() {
     }
   }
 
+  async function recalcular() {
+    setRecalculando(true)
+    setErro(null)
+    setRecalculo(null)
+    try {
+      setRecalculo(await api.recalcularRiscos())
+    } catch (err) {
+      setErro(err.message)
+    } finally {
+      setRecalculando(false)
+    }
+  }
+
   return (
     <section className="max-w-2xl">
       <h1 className="text-2xl font-bold text-marinho">Importar planilha</h1>
@@ -43,18 +58,36 @@ export default function Importar() {
           onChange={(e) => setArquivo(e.target.files[0] ?? null)}
           className="block w-full text-sm file:mr-4 file:rounded file:border-0 file:bg-slate-200 file:px-4 file:py-2"
         />
-        <button
-          type="submit"
-          disabled={!arquivo || enviando}
-          className="rounded bg-marinho px-5 py-2 text-sm text-white disabled:opacity-40"
-        >
-          {enviando ? 'Importando…' : 'Importar'}
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="submit"
+            disabled={!arquivo || enviando}
+            className="rounded bg-marinho px-5 py-2 text-sm text-white disabled:opacity-40"
+          >
+            {enviando ? 'Importando…' : 'Importar'}
+          </button>
+          <button
+            type="button"
+            onClick={recalcular}
+            disabled={recalculando}
+            className="rounded border border-marinho px-5 py-2 text-sm text-marinho disabled:opacity-40"
+          >
+            {recalculando ? 'Recalculando…' : 'Recalcular riscos'}
+          </button>
+        </div>
       </form>
 
       {erro && (
         <div className="mt-4">
           <Erro mensagem={erro} />
+        </div>
+      )}
+
+      {recalculo && (
+        <div className="mt-4 rounded border border-green-300 bg-green-50 p-4 text-sm text-green-900">
+          <p>
+            Risco recalculado para <strong>{recalculo.recalculados}</strong> aluno(s).
+          </p>
         </div>
       )}
 
