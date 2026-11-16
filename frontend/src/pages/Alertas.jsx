@@ -41,7 +41,7 @@ export default function Alertas() {
           return (
             <li
               key={a.id}
-              className={`flex items-start gap-4 rounded-lg p-4 ${destaque ? 'bg-orange-100' : 'bg-white'} ${
+              className={`flex items-start gap-4 rounded-lg p-4 ${destaque ? 'bg-risco-alerta' : 'bg-white'} ${
                 a.lido ? 'opacity-60' : ''
               }`}
             >
