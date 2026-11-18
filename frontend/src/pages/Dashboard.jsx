@@ -1,3 +1,4 @@
+// Autor: Breno Rogeri Miquelino
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api.js'
@@ -41,29 +42,35 @@ export default function Dashboard() {
             </p>
           )}
         </div>
-        <div className="flex gap-3">
-          <select
-            className="rounded border border-slate-300 bg-white px-3 py-2 text-sm"
-            value={turma}
-            onChange={(e) => setTurma(e.target.value)}
-          >
-            <option value="">Todas as turmas</option>
-            {turmas.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
-          <select
-            className="rounded border border-slate-300 bg-white px-3 py-2 text-sm"
-            value={nivel}
-            onChange={(e) => setNivel(e.target.value)}
-          >
-            <option value="">Todos os níveis</option>
-            <option value="ALTO">Alto</option>
-            <option value="MEDIO">Médio</option>
-            <option value="BAIXO">Baixo</option>
-          </select>
+        <div className="grid w-full gap-3 sm:w-auto sm:grid-cols-2">
+          <label className="grid gap-1 text-xs font-semibold text-slate-600">
+            Filtrar por turma
+            <select
+              className="min-w-40 rounded border border-slate-300 bg-white px-3 py-2 text-sm font-normal text-slate-800"
+              value={turma}
+              onChange={(e) => setTurma(e.target.value)}
+            >
+              <option value="">Todas as turmas</option>
+              {turmas.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="grid gap-1 text-xs font-semibold text-slate-600">
+            Nível de risco
+            <select
+              className="min-w-40 rounded border border-slate-300 bg-white px-3 py-2 text-sm font-normal text-slate-800"
+              value={nivel}
+              onChange={(e) => setNivel(e.target.value)}
+            >
+              <option value="">Todos os níveis</option>
+              <option value="ALTO">Alto</option>
+              <option value="MEDIO">Médio</option>
+              <option value="BAIXO">Baixo</option>
+            </select>
+          </label>
         </div>
       </div>
 
@@ -72,7 +79,8 @@ export default function Dashboard() {
 
       {alunos && (
         <div className="overflow-hidden rounded-lg bg-white shadow-sm">
-          <table className="w-full text-left text-sm">
+          <div className="overflow-x-auto">
+          <table aria-label="Alunos ordenados por nível de risco" className="w-full min-w-[640px] text-left text-sm">
             <thead className="border-b-2 border-slate-300 text-slate-600">
               <tr>
                 <th className="px-5 py-3 font-semibold">Aluno</th>
@@ -94,7 +102,15 @@ export default function Dashboard() {
                 <tr
                   key={a.matricula}
                   onClick={() => navigate(`/alunos/${a.matricula}`)}
-                  className="cursor-pointer border-b border-slate-100 hover:bg-slate-50"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      navigate(`/alunos/${a.matricula}`)
+                    }
+                  }}
+                  role="link"
+                  tabIndex={0}
+                  className="cursor-pointer border-b border-slate-100 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-destaque"
                 >
                   <td className="px-5 py-3 font-medium">{a.nome}</td>
                   <td className="px-5 py-3">{a.turma}</td>
@@ -107,6 +123,7 @@ export default function Dashboard() {
               ))}
             </tbody>
           </table>
+          </div>
           <p className="px-5 py-3 text-xs italic text-slate-400">
             → Clique em um aluno para ver o histórico detalhado
           </p>
