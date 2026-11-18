@@ -1,14 +1,13 @@
 // Autor: Cadu Spadari
 package br.puc.evasao.servidor;
 
-import org.bson.Document;
-import org.junit.jupiter.api.Test;
-
 import java.util.List;
 
+import org.bson.Document;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
 
 class ImportadorCsvTest {
 
@@ -100,6 +99,31 @@ class ImportadorCsvTest {
         List<String> campos = ImportadorCsv.separar("1,\"Silva, João\",8ºA", ',');
         assertEquals(ArraysOf("1", "Silva, João", "8ºA"), campos);
     }
+
+
+    @Test
+    void agrupaMultiplosRegistrosDoMesmoAluno() {
+        ImportadorCsv.Analise analise = ImportadorCsv.analisar(
+                CABECALHO
+                        + "2026001,Carlos,8A,2026-10-01,90,8.5\n"
+                        + "2026001,Carlos,8A,2026-11-01,75,6.0\n");
+        assertEquals(2, analise.registros);
+        assertEquals(1, analise.porAluno.size());
+        assertTrue(analise.erros.isEmpty());
+        List<Document> registros = analise.porAluno.get("2026001").getList("registros", Document.class);
+        assertEquals(2, registros.size());
+    }
+
+    @Test
+    void rejeitaFrequenciaENotaNegativas() {
+        ImportadorCsv.Analise analise = ImportadorCsv.analisar(
+                CABECALHO
+                        + "2026001,Lucas,8A,2026-11-01,-5,7.0\n"
+                        + "2026002,Mariana,8A,2026-11-01,85,-2.0\n");
+        assertEquals(0, analise.registros);
+        assertEquals(2, analise.erros.size());
+    }
+
 
     private static List<String> ArraysOf(String... valores) {
         return java.util.Arrays.asList(valores);
