@@ -1,3 +1,4 @@
+// Autor: Cadu Spadari
 // Toda comunicação com o backend passa por aqui:
 // React -> POST /api/comando -> PonteHttp (Java) -> Socket -> Servidor -> MongoDB
 export async function enviar(acao, dados = {}) {

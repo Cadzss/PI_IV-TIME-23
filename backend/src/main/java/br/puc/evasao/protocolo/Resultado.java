@@ -1,3 +1,4 @@
+// Autor: Cadu Spadari
 package br.puc.evasao.protocolo;
 
 /** Resposta da última operação, em JSON: {"ok": true, "dados": ...} ou {"ok": false, "erro": "..."}. */

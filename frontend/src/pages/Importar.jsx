@@ -1,3 +1,4 @@
+// Autor: Cadu Spadari
 import { useState } from 'react'
 import { api } from '../api.js'
 import { Erro } from '../components/Estado.jsx'

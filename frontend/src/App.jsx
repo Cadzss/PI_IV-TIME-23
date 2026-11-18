@@ -1,3 +1,4 @@
+// Autor: Cadu Spadari
 import { NavLink, Route, Routes } from 'react-router-dom'
 import Dashboard from './pages/Dashboard.jsx'
 import DetalheAluno from './pages/DetalheAluno.jsx'

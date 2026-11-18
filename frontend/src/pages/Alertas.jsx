@@ -1,3 +1,4 @@
+// Autor: Cadu Spadari
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, lerData } from '../api.js'
