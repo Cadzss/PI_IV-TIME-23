@@ -1,18 +1,21 @@
 package br.puc.evasao.servidor;
 
-import br.puc.evasao.protocolo.Protocolo;
 import org.bson.Document;
+
+import br.puc.evasao.protocolo.Protocolo;
 
 /** Recebe um pedido do protocolo, executa a ação correspondente e monta a resposta. */
 public class ProcessadorPedidos {
 
     private final AlunoRepositorio alunos;
     private final AlertaRepositorio alertas;
+    private final UsuarioRepositorio usuarios;
     private final ImportadorCsv importador;
 
-    public ProcessadorPedidos(AlunoRepositorio alunos, AlertaRepositorio alertas) {
+    public ProcessadorPedidos(AlunoRepositorio alunos, AlertaRepositorio alertas, UsuarioRepositorio usuarios) {
         this.alunos = alunos;
         this.alertas = alertas;
+        this.usuarios = usuarios;
         this.importador = new ImportadorCsv(alunos, alertas);
     }
 
@@ -50,6 +53,15 @@ public class ProcessadorPedidos {
 
                 case Protocolo.RECALCULAR_RISCOS:
                     return Protocolo.sucesso(new Document("recalculados", alunos.recalcularTodos(alertas)));
+
+                case Protocolo.CADASTRAR_USUARIO:
+                    return Protocolo.sucesso(usuarios.cadastrar(
+                            dados.getString("nome"), dados.getString("email"),
+                            dados.getString("senha"), dados.getString("funcao")));
+
+                case Protocolo.AUTENTICAR:
+                    return Protocolo.sucesso(usuarios.autenticar(
+                            dados.getString("email"), dados.getString("senha")));
 
                 default:
                     return Protocolo.erro("Ação desconhecida: " + acao);

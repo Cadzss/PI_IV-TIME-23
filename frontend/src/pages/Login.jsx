@@ -12,12 +12,13 @@ export default function Login({ onEntrou }) {
 
   if (estaLogado()) return <Navigate to="/" replace />
 
-  function enviar(e) {
+  async function enviar(e) {
     e.preventDefault()
     setErro(null)
     setEnviando(true)
+
     try {
-      entrar(email, senha)
+      await entrar(email, senha)
       onEntrou?.()
       navigate('/', { replace: true })
     } catch (err) {
