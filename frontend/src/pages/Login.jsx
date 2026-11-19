@@ -1,6 +1,6 @@
 // Autor: Cadu Spadari
 import { useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { entrar, estaLogado } from '../auth.js'
 
 export default function Login({ onEntrou }) {
@@ -77,6 +77,13 @@ export default function Login({ onEntrou }) {
             {enviando ? 'Entrando…' : 'Entrar'}
           </button>
         </form>
+
+        <p className="mt-4 text-center text-xs text-slate-500">
+          Não tem conta?{' '}
+          <Link to="/cadastro" className="font-medium text-marinho underline">
+            Criar conta
+          </Link>
+        </p>
 
         <p className="mt-4 text-center text-xs text-slate-500">
           Demo: <span className="font-medium text-slate-700">coordenador@escola.local</span> /{' '}
