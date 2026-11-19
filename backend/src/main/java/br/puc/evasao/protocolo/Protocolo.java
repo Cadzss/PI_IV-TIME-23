@@ -22,6 +22,8 @@ public final class Protocolo {
     public static final String MARCAR_ALERTA_LIDO = "MARCAR_ALERTA_LIDO";
     public static final String IMPORTAR_CSV = "IMPORTAR_CSV";
     public static final String RECALCULAR_RISCOS = "RECALCULAR_RISCOS";
+    public static final String CADASTRAR_USUARIO = "CADASTRAR_USUARIO";
+    public static final String AUTENTICAR = "AUTENTICAR";
 
     private Protocolo() {
     }

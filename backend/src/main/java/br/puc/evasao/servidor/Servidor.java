@@ -1,10 +1,10 @@
 // Autor: Cadu Spadari
 package br.puc.evasao.servidor;
 
+import java.util.ArrayList;
+
 import br.puc.evasao.protocolo.ComunicadoDeDesligamento;
 import br.puc.evasao.protocolo.Parceiro;
-
-import java.util.*;
 
 /**
  * Servidor principal: a AceitadoraDeConexao aceita os clientes e cada um é atendido
@@ -31,9 +31,12 @@ public class Servidor
         new ArrayList<Parceiro> ();
 
         Banco banco = new Banco();
+        UsuarioRepositorio usuarioRepositorio = new UsuarioRepositorio(banco);
+        usuarioRepositorio.garantirCoordenadorDemo();
         ProcessadorPedidos processador = new ProcessadorPedidos(
                 new AlunoRepositorio(banco),
-                new AlertaRepositorio(banco));
+                new AlertaRepositorio(banco),
+                usuarioRepositorio);
 
         AceitadoraDeConexao aceitadoraDeConexao=null;
         try

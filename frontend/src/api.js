@@ -26,6 +26,8 @@ export const api = {
   marcarAlertaLido: (id) => enviar('MARCAR_ALERTA_LIDO', { id }),
   importarCsv: (conteudo) => enviar('IMPORTAR_CSV', { conteudo }),
   recalcularRiscos: () => enviar('RECALCULAR_RISCOS'),
+  cadastrarUsuario: (dados) => enviar('CADASTRAR_USUARIO', dados),
+  autenticar: (email, senha) => enviar('AUTENTICAR', { email, senha }),
 }
 
 // O driver do Mongo serializa datas como {"$date": ...}
