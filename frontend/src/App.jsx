@@ -7,6 +7,7 @@ import DetalheAluno from './pages/DetalheAluno.jsx'
 import Alertas from './pages/Alertas.jsx'
 import Importar from './pages/Importar.jsx'
 import Login from './pages/Login.jsx'
+import Cadastro from './pages/Cadastro.jsx'
 
 const links = [
   { to: '/', rotulo: 'Alunos por risco' },
@@ -34,6 +35,7 @@ export default function App() {
     return (
       <Routes>
         <Route path="/login" element={<Login onEntrou={atualizarSessao} />} />
+        <Route path="/cadastro" element={<Cadastro onEntrou={atualizarSessao} />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     )
