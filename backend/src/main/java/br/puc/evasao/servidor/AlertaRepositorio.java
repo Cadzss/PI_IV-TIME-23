@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-/** Coleção "alertas": notificações geradas quando um aluno entra em risco ou muda de nível. */
+/** Coleção MongoDB "alertas". */
 public class AlertaRepositorio {
 
     public static final String NOVO_RISCO_ALTO = "NOVO_RISCO_ALTO";
@@ -24,13 +24,12 @@ public class AlertaRepositorio {
         this.alertas = banco.getDatabase().getCollection("alertas");
     }
 
-    /** Gera um alerta se o nível de risco mudou. Nível anterior null = aluno novo. */
     public void registrarMudanca(Document aluno, String nivelAnterior, String nivelNovo) {
         if (nivelNovo.equals(nivelAnterior)) {
             return;
         }
         if (nivelAnterior == null && !CalculadoraRisco.ALTO.equals(nivelNovo)) {
-            return; // aluno novo só gera alerta se já entrar em risco alto
+            return;
         }
 
         String nome = aluno.getString("nome");
@@ -58,12 +57,12 @@ public class AlertaRepositorio {
                 .append("criadoEm", new Date());
 
         if (NOVO_RISCO_ALTO.equals(tipo)) {
-            documento.append("email", new NotificadorEmail().notificar(titulo, montarCorpo(aluno, nivelAnterior)));
+            documento.append("email", new NotificadorEmail().notificar(titulo, corpoEmail(aluno, nivelAnterior)));
         }
         alertas.insertOne(documento);
     }
 
-    private static String montarCorpo(Document aluno, String nivelAnterior) {
+    private static String corpoEmail(Document aluno, String nivelAnterior) {
         StringBuilder texto = new StringBuilder();
         texto.append("Aluno: ").append(aluno.getString("nome"))
                 .append(" (").append(aluno.getString("turma")).append(")\n");

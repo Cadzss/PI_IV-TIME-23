@@ -4,14 +4,7 @@ package br.puc.evasao.protocolo;
 import org.bson.Document;
 
 /**
- * Operações aceitas pelo servidor e o formato do Resultado.
- *
- * Pelo Socket viajam objetos Comunicado (ObjectOutputStream / ObjectInputStream):
- *   cliente -> servidor: PedidoDeOperacao, depois PedidoDeResultado
- *   servidor -> cliente: Resultado
- *   PedidoParaSair encerra a conexão; ComunicadoDeDesligamento avisa que o servidor vai desligar.
- *
- * O valor do Resultado é um JSON: {"ok": true, "dados": ...} ou {"ok": false, "erro": "mensagem"}.
+ * Nomes das operações e formato JSON do Resultado: {"ok": true, "dados": ...} ou {"ok": false, "erro": "..."}.
  */
 public final class Protocolo {
 

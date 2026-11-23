@@ -2,75 +2,127 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, lerData } from '../api.js'
+import BadgeRisco from '../components/BadgeRisco.jsx'
 import { Carregando, Erro } from '../components/Estado.jsx'
 
-const corPonto = { ALTO: 'bg-risco-alto', MEDIO: 'bg-risco-medio', BAIXO: 'bg-risco-baixo' }
+function legendaEmail(email) {
+  if (email.status === 'copia_local') {
+    return ' — cópia em logs/emails.log (sem SMTP).'
+  }
+  if (email.status === 'falha') {
+    return ` — falha: ${email.motivo}`
+  }
+  return ''
+}
 
-// Tela 3 — Central de alertas: notificações sempre que um aluno entra em risco ou muda de nível
 export default function Alertas() {
   const [alertas, setAlertas] = useState(null)
   const [erro, setErro] = useState(null)
 
   useEffect(() => {
-    api.listarAlertas().then(setAlertas).catch((e) => setErro(e.message))
+    api.listarAlertas()
+      .then(setAlertas)
+      .catch((e) => setErro(e.message))
   }, [])
 
   async function marcarLido(id) {
     try {
       await api.marcarAlertaLido(id)
-      setAlertas((lista) => lista.map((a) => (a.id === id ? { ...a, lido: true } : a)))
+      setAlertas((lista) =>
+        lista.map((alerta) => (alerta.id === id ? { ...alerta, lido: true } : alerta)),
+      )
     } catch (e) {
       setErro(e.message)
     }
   }
 
-  if (erro) return <Erro mensagem={erro} />
-  if (!alertas) return <Carregando />
+  if (erro) {
+    return <Erro mensagem={erro} />
+  }
+  if (!alertas) {
+    return <Carregando />
+  }
 
-  const naoLidos = alertas.filter((a) => !a.lido).length
+  let naoLidos = 0
+  let nivelAlto = 0
+  let comEmail = 0
+  for (const alerta of alertas) {
+    if (!alerta.lido) naoLidos++
+    if (alerta.nivelNovo === 'ALTO') nivelAlto++
+    if (alerta.email) comEmail++
+  }
 
   return (
-    <section>
-      <h1 className="text-2xl font-bold text-marinho">Notificações</h1>
-      <p className="mb-6 mt-1 text-sm text-slate-500">{naoLidos} não lida(s)</p>
+    <section className="space-y-6">
+      <div>
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-acento">Central de notificações</p>
+        <h1 className="titulo">Alertas de risco</h1>
+        <p className="subtitulo">
+          Gerados no servidor quando o nível do aluno muda (especialmente entrada em ALTO).
+        </p>
+      </div>
 
-      {alertas.length === 0 && <p className="text-slate-500">Nenhum alerta por enquanto.</p>}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="kpi">
+          <p className="text-xs font-bold uppercase text-slate-500">Total</p>
+          <p className="mt-1 text-3xl font-extrabold">{alertas.length}</p>
+        </div>
+        <div className="kpi">
+          <p className="text-xs font-bold uppercase text-risco-alto">Não lidos</p>
+          <p className="mt-1 text-3xl font-extrabold text-risco-alto">{naoLidos}</p>
+        </div>
+        <div className="kpi">
+          <p className="text-xs font-bold uppercase text-slate-500">Com e-mail / nível alto</p>
+          <p className="mt-1 text-3xl font-extrabold">
+            {comEmail} / {nivelAlto}
+          </p>
+        </div>
+      </div>
+
+      {alertas.length === 0 && (
+        <div className="painel px-5 py-10 text-center text-slate-500">Nenhum alerta ainda.</div>
+      )}
 
       <ul className="space-y-3">
-        {alertas.map((a) => {
-          const destaque = !a.lido && a.nivelNovo === 'ALTO'
+        {alertas.map((alerta) => {
+          const urgente = !alerta.lido && alerta.nivelNovo === 'ALTO'
+          let classes = 'painel p-5'
+          if (urgente) classes += ' border-risco-alto/40 bg-risco-alerta'
+          if (alerta.lido) classes += ' opacity-70'
+
           return (
-            <li
-              key={a.id}
-              className={`flex items-start gap-4 rounded-lg p-4 ${destaque ? 'bg-risco-alerta' : 'bg-white'} ${
-                a.lido ? 'opacity-60' : ''
-              }`}
-            >
-              <span className={`mt-1 h-5 w-5 shrink-0 rounded-full ${corPonto[a.nivelNovo] ?? 'bg-slate-400'}`} />
-              <div className="flex-1">
-                <p className="font-semibold">{a.titulo}</p>
-                <p className="mt-1 text-xs text-slate-500">
-                  {lerData(a.criadoEm)?.toLocaleString('pt-BR')} ·{' '}
-                  <Link to={`/alunos/${a.matricula}`} className="text-marinho underline">
-                    ver aluno
-                  </Link>
-                </p>
-                {a.email && (
-                  <p className="mt-1 text-xs text-slate-600">
-                    E-mail para {a.email.destino}
-                    {a.email.status === 'enviado'
-                      ? ' enviado ao coordenador.'
-                      : a.email.status === 'falha'
-                        ? `: falha no envio (${a.email.motivo}).`
-                        : ' registrado neste alerta. Defina SMTP_HOST para o envio real.'}
+            <li key={alerta.id} className={classes}>
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <BadgeRisco nivel={alerta.nivelNovo} />
+                    {!alerta.lido && <span className="chip bg-acento/10 text-acento">NOVO</span>}
+                    {alerta.nivelAnterior && (
+                      <span className="text-xs text-slate-500">
+                        de {alerta.nivelAnterior} → {alerta.nivelNovo}
+                      </span>
+                    )}
+                  </div>
+                  <p className="font-bold text-tinta">{alerta.titulo}</p>
+                  <p className="text-xs text-slate-500">
+                    {lerData(alerta.criadoEm)?.toLocaleString('pt-BR')} · RA {alerta.matricula} ·{' '}
+                    <Link to={`/alunos/${alerta.matricula}`} className="font-bold text-acento">
+                      abrir aluno
+                    </Link>
                   </p>
+                  {alerta.email && (
+                    <p className="text-xs text-slate-600">
+                      E-mail ({alerta.email.status}): {alerta.email.destino}
+                      {legendaEmail(alerta.email)}
+                    </p>
+                  )}
+                </div>
+                {!alerta.lido && (
+                  <button type="button" onClick={() => marcarLido(alerta.id)} className="btn-secundario text-xs">
+                    Marcar como lido
+                  </button>
                 )}
               </div>
-              {!a.lido && (
-                <button onClick={() => marcarLido(a.id)} className="text-xs text-slate-500 hover:text-slate-800">
-                  Marcar como lido
-                </button>
-              )}
             </li>
           )
         })}

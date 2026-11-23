@@ -1,10 +1,10 @@
 export function Carregando() {
-  return <p className="text-slate-500">Carregando…</p>
+  return <div className="painel px-5 py-8 text-sm text-slate-500">Carregando dados do servidor…</div>
 }
 
 export function Erro({ mensagem }) {
   return (
-    <div className="rounded border border-red-300 bg-red-50 p-4 text-sm text-red-800">
+    <div className="rounded-xl border border-risco-alto/30 bg-risco-alerta px-5 py-4 text-sm text-risco-alto">
       <strong>Erro:</strong> {mensagem}
     </div>
   )

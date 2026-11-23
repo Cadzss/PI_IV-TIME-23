@@ -1,33 +1,27 @@
 // Autor: Cadu Spadari
 package br.puc.evasao.protocolo;
 
-/**
- * Pede ao servidor uma operação do sistema, como LISTAR_ALUNOS ou IMPORTAR_CSV.
- * Os dados da operação vão em JSON, por exemplo {"turma": "8ºA"}.
- */
-public class PedidoDeOperacao extends Comunicado
-{
-    private String operacao;
-    private String dados;
+/** Pedido de operação (ex.: LISTAR_ALUNOS) com dados em JSON. */
+public class PedidoDeOperacao extends Comunicado {
 
-    public PedidoDeOperacao (String operacao, String dados)
-    {
+    private final String operacao;
+    private final String dados;
+
+    public PedidoDeOperacao(String operacao, String dados) {
         this.operacao = operacao;
-        this.dados    = dados;
+        this.dados = dados;
     }
 
-    public String getOperacao ()
-    {
-        return this.operacao;
+    public String getOperacao() {
+        return operacao;
     }
 
-    public String getDados ()
-    {
-        return this.dados;
+    public String getDados() {
+        return dados;
     }
 
-    public String toString ()
-    {
-        return (this.operacao+" "+this.dados);
+    @Override
+    public String toString() {
+        return operacao + " " + dados;
     }
 }

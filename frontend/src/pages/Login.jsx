@@ -10,13 +10,14 @@ export default function Login({ onEntrou }) {
   const [erro, setErro] = useState(null)
   const [enviando, setEnviando] = useState(false)
 
-  if (estaLogado()) return <Navigate to="/" replace />
+  if (estaLogado()) {
+    return <Navigate to="/" replace />
+  }
 
-  async function enviar(e) {
+  async function aoEnviarFormulario(e) {
     e.preventDefault()
     setErro(null)
     setEnviando(true)
-
     try {
       await entrar(email, senha)
       onEntrou?.()
@@ -29,67 +30,86 @@ export default function Login({ onEntrou }) {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-papel px-4">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <p className="text-sm font-semibold uppercase tracking-wide text-destaque">Early-Warning</p>
-          <h1 className="mt-1 text-3xl font-bold text-marinho">Evasão Escolar</h1>
-          <p className="mt-2 text-sm text-slate-500">Entre para acompanhar os alunos em risco.</p>
+    <div className="grid min-h-screen lg:grid-cols-[1.1fr_0.9fr]">
+      <aside className="lado-login">
+        <p className="text-xs font-bold uppercase tracking-[0.22em] destaque-texto">
+          Projeto Integrador IV · Time 23
+        </p>
+        <h1 className="mt-5 max-w-lg text-4xl font-extrabold leading-tight">
+          Sistema de alerta precoce para evasão escolar
+        </h1>
+        <p className="mt-4 max-w-md texto-intro-login">
+          O servidor Java calcula o risco com frequência, nota e tendência. O painel mostra quem precisa de
+          acompanhamento agora.
+        </p>
+
+        <div className="mt-10 grid max-w-lg gap-3 text-sm">
+          <div className="card-passo">
+            <p className="titulo-passo">1. Importa CSV</p>
+            <p className="texto-passo">Frequência e notas entram no MongoDB pelo Socket.</p>
+          </div>
+          <div className="card-passo">
+            <p className="titulo-passo">2. Calcula risco</p>
+            <p className="texto-passo">Regra no servidor: ALTO / MÉDIO / BAIXO + sinais.</p>
+          </div>
+          <div className="card-passo">
+            <p className="titulo-passo">3. Gera alerta</p>
+            <p className="texto-passo">Quando o aluno entra em ALTO, notifica a coordenação.</p>
+          </div>
         </div>
+      </aside>
 
-        <form onSubmit={enviar} className="space-y-4 rounded-lg bg-white p-6 shadow-sm">
-          <label className="grid gap-1 text-xs font-semibold text-slate-600">
-            E-mail
-            <input
-              type="email"
-              autoComplete="username"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="rounded border border-slate-300 px-3 py-2 text-sm font-normal text-slate-800 outline-none focus:border-marinho"
-              placeholder="coordenador@escola.local"
-            />
-          </label>
+      <div className="flex items-center justify-center px-6 py-10">
+        <div className="w-full max-w-md">
+          <h2 className="titulo text-2xl">Acesso ao painel</h2>
+          <p className="subtitulo">Entre com e-mail e senha autenticados no servidor.</p>
 
-          <label className="grid gap-1 text-xs font-semibold text-slate-600">
-            Senha
-            <input
-              type="password"
-              autoComplete="current-password"
-              required
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              className="rounded border border-slate-300 px-3 py-2 text-sm font-normal text-slate-800 outline-none focus:border-marinho"
-              placeholder="••••••••"
-            />
-          </label>
+          <form onSubmit={aoEnviarFormulario} className="painel mt-6 space-y-4 p-6">
+            <label className="rotulo">
+              E-mail
+              <input
+                type="email"
+                autoComplete="username"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="campo"
+                placeholder="coordenador@escola.local"
+              />
+            </label>
+            <label className="rotulo">
+              Senha
+              <input
+                type="password"
+                autoComplete="current-password"
+                required
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                className="campo"
+              />
+            </label>
 
-          {erro && (
-            <p className="rounded border border-red-200 bg-risco-alerta px-3 py-2 text-sm text-risco-alto">
-              {erro}
-            </p>
-          )}
+            {erro && <p className="rounded-lg bg-risco-alerta px-3 py-2 text-sm text-risco-alto">{erro}</p>}
 
-          <button
-            type="submit"
-            disabled={enviando}
-            className="w-full rounded bg-marinho px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
-          >
-            {enviando ? 'Entrando…' : 'Entrar'}
-          </button>
-        </form>
+            <button type="submit" disabled={enviando} className="btn-primario w-full">
+              {enviando ? 'Entrando…' : 'Entrar'}
+            </button>
+          </form>
 
-        <p className="mt-4 text-center text-xs text-slate-500">
-          Não tem conta?{' '}
-          <Link to="/cadastro" className="font-medium text-marinho underline">
-            Criar conta
-          </Link>
-        </p>
+          <p className="mt-4 text-center text-sm text-slate-500">
+            Não tem conta?{' '}
+            <Link to="/cadastro" className="font-bold text-acento">
+              Criar conta
+            </Link>
+          </p>
 
-        <p className="mt-4 text-center text-xs text-slate-500">
-          Demo: <span className="font-medium text-slate-700">coordenador@escola.local</span> /{' '}
-          <span className="font-medium text-slate-700">coordenador</span>
-        </p>
+          <div className="mt-5 rounded-xl border border-dashed border-linha bg-white p-4 text-xs text-slate-500">
+            <p className="font-bold text-tinta">Contas demo (banca)</p>
+            <p className="mt-2">coordenador@escola.local / coordenador</p>
+            <p>professor@escola.local / professor</p>
+            <p>Senha institucional: escola-2026</p>
+          </div>
+        </div>
       </div>
     </div>
   )

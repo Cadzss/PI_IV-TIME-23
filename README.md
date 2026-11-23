@@ -2,6 +2,13 @@
 
 Projeto Integrador IV - Time 23. Sistema que identifica antecipadamente alunos em risco de evasão escolar.
 
+## Documentos da entrega
+
+| Documento | Arquivo |
+|---|---|
+| Dicionário de dados (MongoDB) | [`docs/Dicionario_de_Dados.md`](docs/Dicionario_de_Dados.md) · [PDF](docs/Dicionario_de_Dados.pdf) |
+| Relatório de testes (JUnit) | [`docs/Relatorio_de_Testes.md`](docs/Relatorio_de_Testes.md) · [PDF](docs/Relatorio_de_Testes.pdf) |
+
 ## Arquitetura
 
 ```

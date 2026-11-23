@@ -1,8 +1,184 @@
-/* Autor: Cadu Spadari */
+/* Autor: Cadu Spadari — cores em :root para o painel e fallback se o Tailwind não gerar a classe */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --fundo: #eef2f6;
+  --tinta: #102a43;
+  --acento: #0f7b8a;
+  --linha: #d9e2ec;
+  --alto: #b42318;
+  --medio: #b54708;
+  --baixo: #027a48;
+  --alerta: #fef3f2;
+}
+
 body {
-  @apply bg-papel text-slate-800;
+  margin: 0;
+  min-height: 100vh;
+  background: var(--fundo);
+  color: var(--tinta);
+  font-family: Manrope, 'Segoe UI', system-ui, sans-serif;
+}
+
+.titulo {
+  font-size: 1.875rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--tinta);
+}
+
+.subtitulo {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.painel {
+  border: 1px solid var(--linha);
+  border-radius: 0.75rem;
+  background: #fff;
+}
+
+.campo {
+  width: 100%;
+  border: 1px solid var(--linha);
+  border-radius: 0.5rem;
+  background: #fff;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--tinta);
+  outline: none;
+}
+
+.campo:focus {
+  border-color: var(--acento);
+  box-shadow: 0 0 0 3px rgba(15, 123, 138, 0.15);
+}
+
+.rotulo {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.btn-primario {
+  border: 0;
+  border-radius: 0.5rem;
+  background: var(--tinta);
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+}
+
+.btn-primario:hover {
+  background: var(--acento);
+}
+
+.btn-primario:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-secundario {
+  border: 1px solid var(--linha);
+  border-radius: 0.5rem;
+  background: #fff;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--tinta);
+  cursor: pointer;
+}
+
+.btn-secundario:hover {
+  border-color: var(--acento);
+  color: var(--acento);
+}
+
+.btn-secundario:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.kpi {
+  border: 1px solid var(--linha);
+  border-radius: 0.75rem;
+  background: #fff;
+  padding: 1rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* Fallback de marca (iguais ao tailwind.config.js) */
+.bg-tinta { background-color: var(--tinta) !important; }
+.bg-acento { background-color: var(--acento) !important; }
+.bg-fundo { background-color: var(--fundo) !important; }
+.bg-risco-alerta { background-color: var(--alerta) !important; }
+
+.text-tinta { color: var(--tinta) !important; }
+.text-acento { color: var(--acento) !important; }
+.text-risco-alto { color: var(--alto) !important; }
+.text-risco-medio { color: var(--medio) !important; }
+.text-risco-baixo { color: var(--baixo) !important; }
+
+.border-linha { border-color: var(--linha) !important; }
+.border-acento { border-color: var(--acento) !important; }
+.border-risco-alto { border-color: rgba(180, 35, 24, 0.4) !important; }
+.border-risco-baixo { border-color: rgba(2, 122, 72, 0.35) !important; }
+
+/* Lado escuro do login: contraste fixo para a banca */
+.lado-login {
+  background: var(--tinta);
+  color: #ffffff;
+  padding: 3rem 2.5rem;
+}
+
+.lado-login h1,
+.lado-login p,
+.lado-login li {
+  color: inherit;
+}
+
+.lado-login .destaque-texto {
+  color: #5eead4;
+}
+
+.lado-login .texto-intro-login {
+  max-width: 28rem;
+  font-size: 0.875rem;
+  line-height: 1.625;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.lado-login .card-passo {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  padding: 1rem;
+}
+
+.lado-login .card-passo .titulo-passo {
+  color: #5eead4;
+  font-weight: 700;
+}
+
+.lado-login .card-passo .texto-passo {
+  margin-top: 0.25rem;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.875rem;
 }

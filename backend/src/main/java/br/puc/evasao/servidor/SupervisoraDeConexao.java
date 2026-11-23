@@ -10,137 +10,105 @@ import br.puc.evasao.protocolo.Protocolo;
 import br.puc.evasao.protocolo.Resultado;
 import org.bson.Document;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.util.ArrayList;
 
-public class SupervisoraDeConexao extends Thread
-{
-    private Document            resultado=Protocolo.erro("Nenhuma operacao foi pedida");
-    private Parceiro            usuario;
-    private Socket              conexao;
-    private ArrayList<Parceiro> usuarios;
-    private ProcessadorPedidos  processador;
+/** Atende um cliente: recebe pedidos, chama ProcessadorPedidos e devolve Resultado. */
+public class SupervisoraDeConexao extends Thread {
 
-    public SupervisoraDeConexao
-    (Socket conexao, ArrayList<Parceiro> usuarios, ProcessadorPedidos processador)
-    throws Exception
-    {
-        if (conexao==null)
-            throw new Exception ("Conexao ausente");
+    private Document resultado = Protocolo.erro("Nenhuma operacao foi pedida");
+    private Parceiro usuario;
+    private final Socket conexao;
+    private final ArrayList<Parceiro> usuarios;
+    private final ProcessadorPedidos processador;
 
-        if (usuarios==null)
-            throw new Exception ("Usuarios ausentes");
-
-        if (processador==null)
-            throw new Exception ("Processador ausente");
-
-        this.conexao     = conexao;
-        this.usuarios    = usuarios;
+    public SupervisoraDeConexao(Socket conexao, ArrayList<Parceiro> usuarios, ProcessadorPedidos processador)
+            throws Exception {
+        if (conexao == null) {
+            throw new Exception("Conexao ausente");
+        }
+        if (usuarios == null) {
+            throw new Exception("Usuarios ausentes");
+        }
+        if (processador == null) {
+            throw new Exception("Processador ausente");
+        }
+        this.conexao = conexao;
+        this.usuarios = usuarios;
         this.processador = processador;
     }
 
-    public void run ()
-    {
-
+    @Override
+    public void run() {
         ObjectOutputStream transmissor;
-        try
-        {
-            transmissor =
-            new ObjectOutputStream(
-            this.conexao.getOutputStream());
-        }
-        catch (Exception erro)
-        {
+        try {
+            transmissor = new ObjectOutputStream(conexao.getOutputStream());
+        } catch (Exception e) {
             return;
         }
 
-        ObjectInputStream receptor=null;
-        try
-        {
-            receptor=
-            new ObjectInputStream(
-            this.conexao.getInputStream());
+        ObjectInputStream receptor;
+        try {
+            receptor = new ObjectInputStream(conexao.getInputStream());
+        } catch (Exception e) {
+            fecharSilencioso(transmissor, null);
+            return;
         }
-        catch (Exception err0)
-        {
-            try
-            {
+
+        try {
+            usuario = new Parceiro(conexao, receptor, transmissor);
+        } catch (Exception e) {
+            return;
+        }
+
+        try {
+            synchronized (usuarios) {
+                usuarios.add(usuario);
+            }
+
+            for (;;) {
+                Comunicado comunicado = usuario.envie();
+                if (comunicado == null) {
+                    return;
+                }
+                if (comunicado instanceof PedidoDeOperacao) {
+                    PedidoDeOperacao pedido = (PedidoDeOperacao) comunicado;
+                    System.out.println("[Servidor] " + conexao.getRemoteSocketAddress()
+                            + " -> " + pedido.getOperacao());
+
+                    String jsonDados = pedido.getDados();
+                    Document dados = jsonDados == null ? new Document() : Document.parse(jsonDados);
+                    resultado = processador.processar(Protocolo.pedido(pedido.getOperacao(), dados));
+                } else if (comunicado instanceof PedidoDeResultado) {
+                    usuario.receba(new Resultado(resultado.toJson()));
+                } else if (comunicado instanceof PedidoParaSair) {
+                    synchronized (usuarios) {
+                        usuarios.remove(usuario);
+                    }
+                    usuario.adeus();
+                }
+            }
+        } catch (Exception e) {
+            synchronized (usuarios) {
+                if (usuario != null) {
+                    usuarios.remove(usuario);
+                }
+            }
+            fecharSilencioso(transmissor, receptor);
+        }
+    }
+
+    private static void fecharSilencioso(ObjectOutputStream transmissor, ObjectInputStream receptor) {
+        try {
+            if (transmissor != null) {
                 transmissor.close();
             }
-            catch (Exception falha)
-            {} // so tentando fechar antes de acabar a thread
-
-            return;
-        }
-
-        try
-        {
-            this.usuario =
-            new Parceiro (this.conexao,
-                          receptor,
-                          transmissor);
-        }
-        catch (Exception erro)
-        {} // sei que passei os parametros corretos
-
-        try
-        {
-            synchronized (this.usuarios)
-            {
-                this.usuarios.add (this.usuario);
+            if (receptor != null) {
+                receptor.close();
             }
-
-
-            for(;;)
-            {
-                Comunicado comunicado = this.usuario.envie ();
-
-                if (comunicado==null)
-                    return;
-                else if (comunicado instanceof PedidoDeOperacao)
-                {
-                    PedidoDeOperacao pedidoDeOperacao = (PedidoDeOperacao)comunicado;
-
-                    System.out.println ("[Servidor] "+this.conexao.getRemoteSocketAddress()+" -> "+pedidoDeOperacao.getOperacao());
-
-                    Document dados = pedidoDeOperacao.getDados()==null
-                                     ? new Document()
-                                     : Document.parse (pedidoDeOperacao.getDados());
-
-                    this.resultado = this.processador.processar (
-                                     Protocolo.pedido (pedidoDeOperacao.getOperacao(), dados));
-                }
-                else if (comunicado instanceof PedidoDeResultado)
-                {
-                    this.usuario.receba (new Resultado (this.resultado.toJson()));
-                }
-                else if (comunicado instanceof PedidoParaSair)
-                {
-                    synchronized (this.usuarios)
-                    {
-                        this.usuarios.remove (this.usuario);
-                    }
-                    this.usuario.adeus();
-                }
-            }
-        }
-        catch (Exception erro)
-        {
-            synchronized (this.usuarios)
-            {
-                this.usuarios.remove (this.usuario);
-            }
-
-            try
-            {
-                transmissor.close ();
-                receptor   .close ();
-            }
-            catch (Exception falha)
-            {} // so tentando fechar antes de acabar a thread
-
-            return;
+        } catch (Exception ignored) {
         }
     }
 }

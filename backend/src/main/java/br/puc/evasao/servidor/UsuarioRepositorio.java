@@ -26,7 +26,36 @@ public class UsuarioRepositorio {
         usuarios.createIndex(Indexes.ascending("email"), new IndexOptions().unique(true));
     }
 
-    public Document cadastrar(String nome, String email, String senha, String funcao) {
+    /** Cadastro pela tela pública (aluno livre; coordenador/professor com senha institucional). */
+    public Document cadastrar(String nome, String email, String senha, String funcao, String senhaInstitucional) {
+        RegrasUsuario.validarCadastroPublico(nome, email, senha, funcao, senhaInstitucional);
+        return inserir(nome, email, senha, funcao);
+    }
+
+    public Document autenticar(String email, String senha) {
+        Document usuario = usuarios.find(Filters.eq("email", RegrasUsuario.normalizarEmail(email))).first();
+        if (usuario == null || !SenhaHash.confere(senha, usuario.getString("senhaHash"))) {
+            throw new IllegalArgumentException("E-mail ou senha incorretos.");
+        }
+        return publico(usuario);
+    }
+
+    /** Garante as contas de demonstração da banca. */
+    public void garantirContasDemo() {
+        garantirSeAusente("Coordenador", "coordenador@escola.local", "coordenador", RegrasUsuario.COORDENADOR);
+        garantirSeAusente("Professor Demo", "professor@escola.local", "professor", RegrasUsuario.PROFESSOR);
+    }
+
+    private void garantirSeAusente(String nome, String email, String senha, String funcao) {
+        String emailNormal = RegrasUsuario.normalizarEmail(email);
+        if (usuarios.find(Filters.eq("email", emailNormal)).first() != null) {
+            return;
+        }
+        inserir(nome, email, senha, funcao);
+        System.out.println("[Servidor] Conta de demonstração criada: " + emailNormal + " (" + funcao + ")");
+    }
+
+    private Document inserir(String nome, String email, String senha, String funcao) {
         RegrasUsuario.validar(nome, email, senha, funcao);
 
         Document novo = new Document("nome", nome.trim())
@@ -44,22 +73,6 @@ public class UsuarioRepositorio {
             throw e;
         }
         return publico(novo);
-    }
-
-    public Document autenticar(String email, String senha) {
-        Document usuario = usuarios.find(Filters.eq("email", RegrasUsuario.normalizarEmail(email))).first();
-        if (usuario == null || !SenhaHash.confere(senha, usuario.getString("senhaHash"))) {
-            throw new IllegalArgumentException("E-mail ou senha incorretos.");
-        }
-        return publico(usuario);
-    }
-
-    /** Cria a conta de demonstração do coordenador só se ainda não existir nenhum usuário. */
-    public void garantirCoordenadorDemo() {
-        if (usuarios.countDocuments() == 0) {
-            cadastrar("Coordenador", "coordenador@escola.local", "coordenador", "coordenador");
-            System.out.println("[Servidor] Conta de demonstração criada: coordenador@escola.local");
-        }
     }
 
     private static Document publico(Document usuario) {

@@ -1,0 +1,343 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+2 0 obj
+<< /Length 2884 >>
+stream
+BT
+/F1 9 Tf
+11 TL
+1 0 0 1 40 802 Tm
+(========================================================================================) Tj
+T*
+(Relatorio de Testes - PI IV Time 23) Tj
+T*
+(========================================================================================) Tj
+T*
+( ) Tj
+T*
+( ) Tj
+T*
+(Relatorio de Testes - Early-Warning de Evasao Escolar) Tj
+T*
+(-----------------------------------------------------) Tj
+T*
+( ) Tj
+T*
+(**Projeto:** PI IV - Time 23) Tj
+T*
+(**Autor dos testes unitarios:** Cadu Spadari) Tj
+T*
+(**Framework:** JUnit 5 \(Maven Surefire\)) Tj
+T*
+(**Como executar:** na pasta `backend`, com JDK 11+:) Tj
+T*
+( ) Tj
+T*
+(./mvnw test) Tj
+T*
+( ) Tj
+T*
+(Os testes **nao** exigem MongoDB nem servidor ligados - cobrem regras puras \(score e CSV\).) Tj
+T*
+( ) Tj
+T*
+(---) Tj
+T*
+( ) Tj
+T*
+( ) Tj
+T*
+(1. Escopo) Tj
+T*
+( ) Tj
+T*
+(Camada | O que foi testado | Arquivo) Tj
+T*
+(Regra de negocio | Pontuacao e niveis ALTO / MEDIO / BAIXO | `CalculadoraRiscoTest.java`) Tj
+T*
+(Importacao | Parser, validacao e agrupamento do CSV | `ImportadorCsvTest.java`) Tj
+T*
+( ) Tj
+T*
+(**Fora do escopo unitario \(MVP\):** integracao socket ponta a ponta, SMTP real, UI React) Tj
+T*
+(  \(validados manualmente na demo\).) Tj
+T*
+( ) Tj
+T*
+(---) Tj
+T*
+( ) Tj
+T*
+( ) Tj
+T*
+(2. Ambiente de teste) Tj
+T*
+( ) Tj
+T*
+(Item | Valor) Tj
+T*
+(Linguagem | Java 11+) Tj
+T*
+(Build | Maven Wrapper \(`./mvnw`\)) Tj
+T*
+(Dependencias de teste | JUnit Jupiter) Tj
+T*
+(Dados | Historicos e CSVs montados no proprio teste \(sem fixture externa\)) Tj
+T*
+( ) Tj
+T*
+(---) Tj
+T*
+( ) Tj
+T*
+( ) Tj
+T*
+(3. Suite `CalculadoraRiscoTest` \(10 casos\)) Tj
+T*
+( ) Tj
+T*
+(Criterios da regra \(MVP\):) Tj
+T*
+( ) Tj
+T*
+(Condicao | Pontos) Tj
+T*
+(Frequencia atual &lt; 75% | +3) Tj
+T*
+(Frequencia atual &lt; 85% \(e >= 75%\) | +1) Tj
+T*
+(Nota atual &lt; 5,0 | +2) Tj
+T*
+(Nota atual &lt; 7,0 \(e >= 5,0\) | +1) Tj
+T*
+(Queda de nota >= 1,0 na janela de 3 registros | +1) Tj
+T*
+(Queda de frequencia >= 10 p.p. na janela de 3 | +1) Tj
+T*
+( ) Tj
+T*
+(Classificacao: **>= 4 -> ALTO - 2-3 -> MEDIO - 0-1 -> BAIXO**) Tj
+T*
+( ) Tj
+T*
+(ID | Metodo de teste | Entrada \(resumo\) | Resultado esperado | Status) Tj
+T*
+(CR-01 | `historicoVazioFicaBaixo` | Historico vazio | nivel BAIXO, pontuacao 0 | OK) Tj
+T*
+(CR-02 | `frequenciaAbaixoDe75SomaTresENotaAbaixoDe5SomaDois` | freq 70, nota 4,0 |) Tj
+T*
+(  pontuacao 5, ALTO; sinais com 75% e 5,0 | OK) Tj
+T*
+(CR-03 | `frequenciaAbaixoDe75NaoSomaTambemOPontoDe85` | freq 70, nota 8,0 | pontuacao 3 \(so) Tj
+T*
+(  +3\), MEDIO | OK) Tj
+T*
+(CR-04 | `frequenciaAbaixoDe85ENotaAbaixoDe7FicamMedio` | freq 80, nota 6,0 | pontuacao 2,) Tj
+T*
+(  MEDIO | OK) Tj
+T*
+(CR-05 | `limitesSeguemARegraEstritaDeMenorQue` | \(85,7,0\) e \(75,5,0\) | 0->BAIXO; 2->MEDIO) Tj
+T*
+(  \(limites inclusivos\) | OK) Tj
+T*
+(CR-06 | `quedaNaJanelaDeTresRegistrosSomaUmPontoCada` | 4 registros com queda nota e freq |) Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Length 3447 >>
+stream
+BT
+/F1 9 Tf
+11 TL
+1 0 0 1 40 802 Tm
+(  pontuacao 4, ALTO | OK) Tj
+T*
+(CR-07 | `quatroPontosOuMaisSaoAltoEDoisOuTresSaoMedio` | \(74,6,9\) e \(84,6,0\) | ALTO e MEDIO) Tj
+T*
+(  | OK) Tj
+T*
+(CR-08 | `pesoColocaAltoAntesDeMedioEBaixo` | pesos dos niveis | ALTO &lt; MEDIO &lt; BAIXO) Tj
+T*
+(  na ordenacao | OK) Tj
+T*
+(CR-09 | `pontuacaoMaximaAtingeSetePontosComTodosOsCriterios` | queda + freq&lt;75 +) Tj
+T*
+(  nota&lt;5 | pontuacao 7, ALTO | OK) Tj
+T*
+(CR-10 | `quedaExataNoLimiteDeUmPontoENaFrequenciaDezPontosSomaPontos` | queda exata 1,0 e) Tj
+T*
+(  10 p.p. | pontuacao 2, MEDIO | OK) Tj
+T*
+( ) Tj
+T*
+(---) Tj
+T*
+( ) Tj
+T*
+( ) Tj
+T*
+(4. Suite `ImportadorCsvTest` \(10 casos\)) Tj
+T*
+( ) Tj
+T*
+(Cabecalho obrigatorio: `matricula,nome,turma,data,frequencia,nota` \(`,` ou `;`\).) Tj
+T*
+( ) Tj
+T*
+(ID | Metodo de teste | Cenario | Resultado esperado | Status) Tj
+T*
+(IC-01 | `importaLinhaValida` | Uma linha correta | 1 aluno, 1 registro, sem erros | OK) Tj
+T*
+(IC-02 | `aceitaPontoEVirgulaEVirgulaDecimal` | `;` e `6,5` / `80%` | frequencia 80,0 e nota) Tj
+T*
+(  6,5 | OK) Tj
+T*
+(IC-03 | `nomeEntreAspasPodeTerVirgula` | `"Silva, Joao"` | nome preservado com virgula | OK) Tj
+T*
+(IC-04 | `rejeitaFrequenciaENotaForaDaFaixaSemDescartarAPlanilha` | 120%, nota 11 e linha) Tj
+T*
+(  boa | 2 erros + 1 registro valido | OK) Tj
+T*
+(IC-05 | `rejeitaDataInvalidaEPlanilhaVazia` | `01/11/2026` e CSV vazio | erro de data;) Tj
+T*
+(  vazio lanca excecao | OK) Tj
+T*
+(IC-06 | `rejeitaDiaQueNaoExisteEAceita29DeFevereiroEmAnoBissexto` | 31/02, 31/04,) Tj
+T*
+(  29/02/2024 | rejeita inexistentes; aceita bissexto | OK) Tj
+T*
+(IC-07 | `exigeColunasDoCabecalho` | cabecalho incompleto | excecao citando coluna ausente |) Tj
+T*
+(  OK) Tj
+T*
+(IC-08 | `separarRespeitaAspas` | campos com aspas | lista de 3 campos correta | OK) Tj
+T*
+(IC-09 | `agrupaMultiplosRegistrosDoMesmoAluno` | 2 linhas mesma matricula | 1 aluno, 2) Tj
+T*
+(  registros | OK) Tj
+T*
+(IC-10 | `rejeitaFrequenciaENotaNegativas` | ?5 e ?2,0 | 0 registros, 2 erros | OK) Tj
+T*
+( ) Tj
+T*
+(---) Tj
+T*
+( ) Tj
+T*
+( ) Tj
+T*
+(5. Resumo quantitativo) Tj
+T*
+( ) Tj
+T*
+(Suite | Casos | Passou | Falhou | Cobertura funcional) Tj
+T*
+(CalculadoraRiscoTest | 10 | 10 | 0 | Score, limites, quedas, pesos) Tj
+T*
+(ImportadorCsvTest | 10 | 10 | 0 | Separador, faixas, datas, agrupamento) Tj
+T*
+(**Total** | **20** | **20** | **0** | Regras centrais do MVP) Tj
+T*
+( ) Tj
+T*
+(---) Tj
+T*
+( ) Tj
+T*
+( ) Tj
+T*
+(6. Testes manuais \(aceitacao da demo\)) Tj
+T*
+( ) Tj
+T*
+(ID | Fluxo | Passos | Esperado) Tj
+T*
+(MN-01 | Login | Abrir `/login`, autenticar conta demo | Entra no Dashboard) Tj
+T*
+(MN-02 | Listagem | Filtrar turma / nivel | Lista ordenada ALTO -> MEDIO -> BAIXO) Tj
+T*
+(MN-03 | Detalhe | Abrir um aluno | Historico + grafico + sinais) Tj
+T*
+(MN-04 | Alertas | Ver alertas e marcar lido | Status atualiza) Tj
+T*
+(MN-05 | Importar CSV | Enviar `backend/dados/exemplo.csv` | Contadores) Tj
+T*
+(  alunos/registros/erros) Tj
+T*
+(MN-06 | Recalcular | Botao recalcular riscos | Riscos e alertas atualizam) Tj
+T*
+(MN-07 | E-mail ALTO | Aluno entra em ALTO sem SMTP | Alerta com `email.status =) Tj
+T*
+(  copia_local` e copia em `logs/emails.log`) Tj
+T*
+( ) Tj
+T*
+(---) Tj
+T*
+( ) Tj
+T*
+( ) Tj
+T*
+(7. Conclusao) Tj
+T*
+( ) Tj
+T*
+(Os **20 testes unitarios** validam as duas regras mais criticas do MVP \(score de evasao e) Tj
+T*
+(  importacao da planilha\), incluindo bordas \(limites 75/85/5/7, datas inexistentes,) Tj
+ET
+endstream
+endobj
+4 0 obj
+<< /Length 263 >>
+stream
+BT
+/F1 9 Tf
+11 TL
+1 0 0 1 40 802 Tm
+(  bissexto, valores negativos e agrupamento por matricula\). Os fluxos de interface e) Tj
+T*
+(  integracao foram conferidos manualmente para a banca.) Tj
+T*
+( ) Tj
+T*
+(*Documento gerado para entrega do PI IV - Time 23.*) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 595 842] /Contents 2 0 R /Resources << /Font << /F1 1 0 R >> >> >>
+endobj
+6 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 595 842] /Contents 3 0 R /Resources << /Font << /F1 1 0 R >> >> >>
+endobj
+7 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 1 0 R >> >> >>
+endobj
+8 0 obj
+<< /Type /Pages /Kids [5 0 R 6 0 R 7 0 R] /Count 3 >>
+endobj
+9 0 obj
+<< /Type /Catalog /Pages 8 0 R >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000077 00000 n 
+0000003013 00000 n 
+0000006512 00000 n 
+0000006826 00000 n 
+0000006952 00000 n 
+0000007078 00000 n 
+0000007204 00000 n 
+0000007273 00000 n 
+trailer
+<< /Size 10 /Root 9 0 R >>
+startxref
+7322
+%%EOF

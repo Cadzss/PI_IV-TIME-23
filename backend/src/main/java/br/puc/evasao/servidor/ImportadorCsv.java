@@ -11,16 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Importa a planilha de frequência e notas (CSV exportado do Excel/Google Planilhas).
- *
- * Cabeçalho esperado (separador "," ou ";"):
- *   matricula,nome,turma,data,frequencia,nota
- *   2026001,João P.,8ºA,2026-08-01,80,6.5
- *
- * - data: AAAA-MM-DD, e a data precisa existir no calendário
- * - frequencia: porcentagem de 0 a 100
- * - nota: 0 a 10 (aceita vírgula decimal: 6,5)
- * - nomes com vírgula precisam ir entre aspas: "Silva, João"
+ * Importa CSV matricula,nome,turma,data,frequencia,nota (separador , ou ;).
  */
 public class ImportadorCsv {
 
@@ -37,16 +28,18 @@ public class ImportadorCsv {
     public Document importar(String conteudo) {
         Analise analise = analisar(conteudo);
         for (Document a : analise.porAluno.values()) {
-            alunos.salvarRegistros(a.getString("matricula"), a.getString("nome"), a.getString("turma"),
-                    a.getList("registros", Document.class), alertas);
+            alunos.salvarRegistros(
+                    a.getString("matricula"),
+                    a.getString("nome"),
+                    a.getString("turma"),
+                    a.getList("registros", Document.class),
+                    alertas);
         }
-
         return new Document("alunos", analise.porAluno.size())
                 .append("registros", analise.registros)
                 .append("erros", analise.erros);
     }
 
-    /** Lê e valida a planilha sem gravar. Usado pelo importador e pelos testes. */
     static Analise analisar(String conteudo) {
         if (conteudo == null || conteudo.trim().isEmpty()) {
             throw new IllegalArgumentException("Planilha vazia ou sem cabeçalho");
@@ -79,15 +72,13 @@ public class ImportadorCsv {
                         .append("nome", campo(c, indice, "nome"))
                         .append("turma", campo(c, indice, "turma"))
                         .append("registros", new ArrayList<Document>()));
-                aluno.getList("registros", Document.class).add(new Document("data", data)
-                        .append("frequencia", frequencia)
-                        .append("nota", nota));
+                aluno.getList("registros", Document.class)
+                        .add(new Document("data", data).append("frequencia", frequencia).append("nota", nota));
                 registros++;
             } catch (RuntimeException e) {
                 erros.add("Linha " + (i + 1) + ": " + e.getMessage());
             }
         }
-
         return new Analise(porAluno, registros, erros);
     }
 
@@ -135,25 +126,24 @@ public class ImportadorCsv {
         }
     }
 
-    /** Separa uma linha de CSV respeitando campos entre aspas. */
     static List<String> separar(String linha, char sep) {
         List<String> campos = new ArrayList<>();
         StringBuilder atual = new StringBuilder();
         boolean aspas = false;
         for (int i = 0; i < linha.length(); i++) {
-            char c = linha.charAt(i);
-            if (c == '"') {
+            char ch = linha.charAt(i);
+            if (ch == '"') {
                 if (aspas && i + 1 < linha.length() && linha.charAt(i + 1) == '"') {
                     atual.append('"');
                     i++;
                 } else {
                     aspas = !aspas;
                 }
-            } else if (c == sep && !aspas) {
+            } else if (ch == sep && !aspas) {
                 campos.add(atual.toString());
                 atual.setLength(0);
             } else {
-                atual.append(c);
+                atual.append(ch);
             }
         }
         campos.add(atual.toString());

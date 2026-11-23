@@ -1,22 +1,17 @@
 const estilos = {
-  ALTO: { cor: 'bg-risco-alto', rotulo: 'ALTO' },
-  MEDIO: { cor: 'bg-risco-medio', rotulo: 'MÉDIO' },
-  BAIXO: { cor: 'bg-risco-baixo', rotulo: 'BAIXO' },
+  ALTO: { classe: 'bg-risco-alerta text-risco-alto', rotulo: 'ALTO' },
+  MEDIO: { classe: 'bg-amber-50 text-risco-medio', rotulo: 'MÉDIO' },
+  BAIXO: { classe: 'bg-emerald-50 text-risco-baixo', rotulo: 'BAIXO' },
 }
 
 export function rotuloRisco(nivel) {
   return estilos[nivel]?.rotulo ?? nivel
 }
 
-export default function BadgeRisco({ nivel, grande = false, prefixo = '' }) {
-  const e = estilos[nivel] ?? { cor: 'bg-slate-400', rotulo: nivel ?? '—' }
+export default function BadgeRisco({ nivel, grande = false }) {
+  const e = estilos[nivel] ?? { classe: 'bg-slate-100 text-slate-600', rotulo: nivel ?? '—' }
   return (
-    <span
-      className={`inline-block rounded text-center font-bold text-white ${e.cor} ${
-        grande ? 'px-6 py-2 text-base' : 'w-20 px-2 py-1 text-xs'
-      }`}
-    >
-      {prefixo}
+    <span className={`chip ${e.classe} ${grande ? 'px-3 py-1.5 text-sm' : ''}`}>
       {e.rotulo}
     </span>
   )

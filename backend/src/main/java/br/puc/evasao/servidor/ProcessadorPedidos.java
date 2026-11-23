@@ -57,7 +57,8 @@ public class ProcessadorPedidos {
                 case Protocolo.CADASTRAR_USUARIO:
                     return Protocolo.sucesso(usuarios.cadastrar(
                             dados.getString("nome"), dados.getString("email"),
-                            dados.getString("senha"), dados.getString("funcao")));
+                            dados.getString("senha"), dados.getString("funcao"),
+                            dados.getString("senhaInstitucional")));
 
                 case Protocolo.AUTENTICAR:
                     return Protocolo.sucesso(usuarios.autenticar(

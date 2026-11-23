@@ -13,14 +13,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executors;
 
 /**
- * Ponte entre o navegador e o servidor.
- *
- * O navegador (React) não consegue abrir um Socket TCP direto, então ele faz um POST HTTP
- * para esta ponte, que usa o Cliente Socket Java para repassar o pedido ao Servidor.
- *
- *   React --HTTP--> PonteHttp --> Cliente --Socket--> Servidor --> MongoDB
- *
- * Endpoint único: POST /api/comando   corpo: {"acao": "...", "dados": {...}}
+ * Ponte HTTP entre o React e o Servidor (Socket).
+ * POST /api/comando — corpo: {"acao": "...", "dados": {...}}
  */
 public class PonteHttp {
 
@@ -52,12 +46,13 @@ public class PonteHttp {
         troca.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
         troca.getResponseHeaders().add("Access-Control-Allow-Methods", "POST, OPTIONS");
 
-        if ("OPTIONS".equals(troca.getRequestMethod())) {
+        String metodo = troca.getRequestMethod();
+        if ("OPTIONS".equals(metodo)) {
             troca.sendResponseHeaders(204, -1);
             troca.close();
             return;
         }
-        if (!"POST".equals(troca.getRequestMethod())) {
+        if (!"POST".equals(metodo)) {
             responder(troca, 405, Protocolo.erro("Use POST"));
             return;
         }
@@ -72,7 +67,9 @@ public class PonteHttp {
         }
 
         try {
-            responder(troca, 200, cliente.peca(requisicao.getString("acao"), requisicao.get("dados", Document.class)));
+            String acao = requisicao.getString("acao");
+            Document dados = requisicao.get("dados", Document.class);
+            responder(troca, 200, cliente.peca(acao, dados));
         } catch (Exception e) {
             responder(troca, 502, Protocolo.erro("Servidor Socket indisponível: " + e.getMessage()));
         }

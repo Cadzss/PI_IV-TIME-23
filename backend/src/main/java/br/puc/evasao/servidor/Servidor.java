@@ -32,7 +32,7 @@ public class Servidor
 
         Banco banco = new Banco();
         UsuarioRepositorio usuarioRepositorio = new UsuarioRepositorio(banco);
-        usuarioRepositorio.garantirCoordenadorDemo();
+        usuarioRepositorio.garantirContasDemo();
         ProcessadorPedidos processador = new ProcessadorPedidos(
                 new AlunoRepositorio(banco),
                 new AlertaRepositorio(banco),

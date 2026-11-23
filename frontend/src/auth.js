@@ -8,6 +8,16 @@ export const FUNCOES = {
   aluno: 'Aluno',
 }
 
+/** Funções que pedem senha institucional no cadastro. */
+export const FUNCOES_COM_SENHA_INSTITUCIONAL = ['coordenador', 'professor']
+
+/** O que cada função pode abrir no painel. */
+export const PERMISSOES = {
+  coordenador: ['/', '/alertas', '/importar', '/alunos'],
+  professor: ['/', '/importar', '/alunos'],
+  aluno: ['/', '/alunos'],
+}
+
 export function sessaoAtual() {
   try {
     const bruto = localStorage.getItem(CHAVE)
@@ -19,6 +29,14 @@ export function sessaoAtual() {
 
 export function estaLogado() {
   return Boolean(sessaoAtual())
+}
+
+export function podeAcessar(caminho) {
+  const sessao = sessaoAtual()
+  if (!sessao) return false
+  const permitidos = PERMISSOES[sessao.funcao] || []
+  if (caminho.startsWith('/alunos/')) return permitidos.includes('/alunos')
+  return permitidos.includes(caminho)
 }
 
 function iniciarSessao(usuario) {
@@ -40,14 +58,14 @@ export async function entrar(email, senha) {
 
 export async function cadastrar(dados) {
   const funcao = dados.funcao
+  const nome = (dados.nome || '').trim()
+  const email = (dados.email || '').trim().toLowerCase()
+  const senha = dados.senha || ''
+  const senhaInstitucional = dados.senhaInstitucional || ''
 
   if (!FUNCOES[funcao]) {
     throw new Error('Escolha uma função.')
   }
-
-  const nome = (dados.nome || '').trim()
-  const email = (dados.email || '').trim().toLowerCase()
-  const senha = dados.senha || ''
 
   if (nome.length < 3) {
     throw new Error('Informe o nome completo.')
@@ -65,11 +83,16 @@ export async function cadastrar(dados) {
     throw new Error('As senhas não conferem.')
   }
 
+  if (FUNCOES_COM_SENHA_INSTITUCIONAL.includes(funcao) && !senhaInstitucional) {
+    throw new Error('Informe a senha institucional para cadastrar coordenador ou professor.')
+  }
+
   const usuario = await api.cadastrarUsuario({
     nome,
     email,
     senha,
     funcao,
+    senhaInstitucional: FUNCOES_COM_SENHA_INSTITUCIONAL.includes(funcao) ? senhaInstitucional : undefined,
   })
 
   return iniciarSessao(usuario)

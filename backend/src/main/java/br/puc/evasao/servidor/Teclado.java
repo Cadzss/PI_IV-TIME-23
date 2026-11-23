@@ -1,26 +1,20 @@
 // Autor: Cadu Spadari
 package br.puc.evasao.servidor;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
-public class Teclado
-{
-    private static BufferedReader teclado =
-                   new BufferedReader (
-                   new InputStreamReader (
-                   System.in));
+public class Teclado {
 
-    public static String getUmString ()
-    {
-        String ret=null;
+    private static final BufferedReader entrada =
+            new BufferedReader(new InputStreamReader(System.in));
 
-        try
-        {
-            ret = teclado.readLine ();
+    public static String getUmString() {
+        try {
+            return entrada.readLine();
+        } catch (IOException e) {
+            return null;
         }
-        catch (IOException erro)
-        {} // sei que nao vai dar erro
-
-        return ret;
     }
 }

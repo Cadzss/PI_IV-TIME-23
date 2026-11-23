@@ -3,65 +3,56 @@ package br.puc.evasao.servidor;
 
 import br.puc.evasao.protocolo.Parceiro;
 
-import java.net.*;
-import java.util.*;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.ArrayList;
 
-public class AceitadoraDeConexao extends Thread
-{
-    private ServerSocket        pedido;
-    private ArrayList<Parceiro> usuarios;
-    private ProcessadorPedidos  processador;
+/** Thread que aceita conexões Socket e abre uma supervisora para cada cliente. */
+public class AceitadoraDeConexao extends Thread {
 
-    public AceitadoraDeConexao
-    (String porta, ArrayList<Parceiro> usuarios, ProcessadorPedidos processador)
-    throws Exception
-    {
-        if (porta==null)
-            throw new Exception ("Porta ausente");
+    private final ServerSocket pedido;
+    private final ArrayList<Parceiro> usuarios;
+    private final ProcessadorPedidos processador;
 
-        try
-        {
-            this.pedido =
-            new ServerSocket (Integer.parseInt(porta));
+    public AceitadoraDeConexao(String porta, ArrayList<Parceiro> usuarios, ProcessadorPedidos processador)
+            throws Exception {
+        if (porta == null) {
+            throw new Exception("Porta ausente");
         }
-        catch (Exception  erro)
-        {
-            throw new Exception ("Porta invalida");
+        if (usuarios == null) {
+            throw new Exception("Usuarios ausentes");
+        }
+        if (processador == null) {
+            throw new Exception("Processador ausente");
         }
 
-        if (usuarios==null)
-            throw new Exception ("Usuarios ausentes");
-
-        if (processador==null)
-            throw new Exception ("Processador ausente");
-
-        this.usuarios    = usuarios;
+        try {
+            this.pedido = new ServerSocket(Integer.parseInt(porta));
+        } catch (Exception e) {
+            throw new Exception("Porta invalida");
+        }
+        this.usuarios = usuarios;
         this.processador = processador;
     }
 
-    public void run ()
-    {
-        for(;;)
-        {
-            Socket conexao=null;
-            try
-            {
-                conexao = this.pedido.accept();
-            }
-            catch (Exception erro)
-            {
+    @Override
+    public void run() {
+        for (;;) {
+            Socket conexao;
+            try {
+                conexao = pedido.accept();
+            } catch (Exception e) {
                 continue;
             }
 
-            SupervisoraDeConexao supervisoraDeConexao=null;
-            try
-            {
-                supervisoraDeConexao =
-                new SupervisoraDeConexao (conexao, usuarios, processador);
+            SupervisoraDeConexao supervisora = null;
+            try {
+                supervisora = new SupervisoraDeConexao(conexao, usuarios, processador);
+            } catch (Exception ignored) {
             }
-            catch (Exception erro)
-            {} // sei que passei parametros corretos para o construtor
-            supervisoraDeConexao.start();
+            if (supervisora != null) {
+                supervisora.start();
+            }
         }
     }
 }

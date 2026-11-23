@@ -1,14 +1,15 @@
 // Autor: Cadu Spadari
 package br.puc.evasao.servidor;
 
+import org.bson.Document;
+import org.junit.jupiter.api.Test;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.bson.Document;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import org.junit.jupiter.api.Test;
 
 class CalculadoraRiscoTest {
 
@@ -50,7 +51,6 @@ class CalculadoraRiscoTest {
         assertEquals(0, seguro.getInteger("pontuacao"));
         assertEquals(CalculadoraRisco.BAIXO, seguro.getString("nivel"));
 
-        // 75 ainda é < 85 (+1) e 5,0 ainda é < 7 (+1)
         Document noLimite = calculadora.calcular(Collections.singletonList(registro("2026-11-01", 75, 5.0)));
         assertEquals(2, noLimite.getInteger("pontuacao"));
         assertEquals(CalculadoraRisco.MEDIO, noLimite.getString("nivel"));
@@ -64,7 +64,6 @@ class CalculadoraRiscoTest {
                 registro("2026-10-01", 90, 8.0),
                 registro("2026-11-01", 78, 6.5));
         Document risco = calculadora.calcular(historico);
-        // frequência 78 < 85 (+1), nota 6.5 < 7 (+1), queda de nota 1.5 (+1), queda de frequência 12 (+1)
         assertEquals(4, risco.getInteger("pontuacao"));
         assertEquals(CalculadoraRisco.ALTO, risco.getString("nivel"));
     }
@@ -83,7 +82,6 @@ class CalculadoraRiscoTest {
         assertTrue(CalculadoraRisco.peso(CalculadoraRisco.MEDIO) < CalculadoraRisco.peso(CalculadoraRisco.BAIXO));
     }
 
-
     @Test
     void pontuacaoMaximaAtingeSetePontosComTodosOsCriterios() {
         List<Document> historico = Arrays.asList(
@@ -91,7 +89,6 @@ class CalculadoraRiscoTest {
                 registro("2026-10-01", 85, 8.5),
                 registro("2026-11-01", 70, 4.5));
         Document risco = calculadora.calcular(historico);
-        // freq < 75 (+3), nota < 5.0 (+2), queda nota >= 1.0 (+1), queda freq >= 10 (+1) = 7
         assertEquals(7, risco.getInteger("pontuacao"));
         assertEquals(CalculadoraRisco.ALTO, risco.getString("nivel"));
     }
@@ -103,11 +100,9 @@ class CalculadoraRiscoTest {
                 registro("2026-10-01", 90, 7.5),
                 registro("2026-11-01", 85, 7.0));
         Document risco = calculadora.calcular(historico);
-        // freq 85 (0), nota 7.0 (0), queda nota 1.0 (+1), queda freq 10 (+1) = 2
         assertEquals(2, risco.getInteger("pontuacao"));
         assertEquals(CalculadoraRisco.MEDIO, risco.getString("nivel"));
     }
-
 
     private static Document registro(String data, double frequencia, double nota) {
         return new Document("data", data).append("frequencia", frequencia).append("nota", nota);

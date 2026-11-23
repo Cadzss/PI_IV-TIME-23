@@ -1,13 +1,15 @@
 // Autor: Cadu Spadari
 package br.puc.evasao.servidor;
 
+import org.bson.Document;
+import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
 import java.util.List;
 
-import org.bson.Document;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import org.junit.jupiter.api.Test;
 
 class ImportadorCsvTest {
 
@@ -97,9 +99,8 @@ class ImportadorCsvTest {
     @Test
     void separarRespeitaAspas() {
         List<String> campos = ImportadorCsv.separar("1,\"Silva, João\",8ºA", ',');
-        assertEquals(ArraysOf("1", "Silva, João", "8ºA"), campos);
+        assertEquals(Arrays.asList("1", "Silva, João", "8ºA"), campos);
     }
-
 
     @Test
     void agrupaMultiplosRegistrosDoMesmoAluno() {
@@ -122,10 +123,5 @@ class ImportadorCsvTest {
                         + "2026002,Mariana,8A,2026-11-01,85,-2.0\n");
         assertEquals(0, analise.registros);
         assertEquals(2, analise.erros.size());
-    }
-
-
-    private static List<String> ArraysOf(String... valores) {
-        return java.util.Arrays.asList(valores);
     }
 }

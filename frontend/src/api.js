@@ -1,6 +1,6 @@
 // Autor: Cadu Spadari
-// Toda comunicação com o backend passa por aqui:
-// React -> POST /api/comando -> PonteHttp (Java) -> Socket -> Servidor -> MongoDB
+// React envia POST /api/comando → PonteHttp (Java) → Socket → Servidor → MongoDB
+
 export async function enviar(acao, dados = {}) {
   let resposta
   try {
@@ -12,9 +12,19 @@ export async function enviar(acao, dados = {}) {
   } catch {
     throw new Error('Não foi possível conectar à ponte HTTP (porta 8080). Ela está rodando?')
   }
-  const json = await resposta.json().catch(() => null)
-  if (!json) throw new Error(`Resposta inválida do servidor (HTTP ${resposta.status})`)
-  if (!json.ok) throw new Error(json.erro || 'Erro desconhecido')
+
+  let json = null
+  try {
+    json = await resposta.json()
+  } catch {
+  }
+
+  if (!json) {
+    throw new Error(`Resposta inválida do servidor (HTTP ${resposta.status})`)
+  }
+  if (!json.ok) {
+    throw new Error(json.erro || 'Erro desconhecido')
+  }
   return json.dados
 }
 

@@ -1,0 +1,385 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+2 0 obj
+<< /Length 3049 >>
+stream
+BT
+/F1 9 Tf
+11 TL
+1 0 0 1 40 802 Tm
+(========================================================================================) Tj
+T*
+(Dicionario de Dados - PI IV Time 23) Tj
+T*
+(========================================================================================) Tj
+T*
+( ) Tj
+T*
+( ) Tj
+T*
+(Dicionario de Dados - Early-Warning de Evasao Escolar) Tj
+T*
+(-----------------------------------------------------) Tj
+T*
+( ) Tj
+T*
+(**Projeto:** PI IV - Time 23) Tj
+T*
+(**SGBD:** MongoDB) Tj
+T*
+(**Banco:** `early_warning_evasao` \(variavel `MONGO_DB`\)) Tj
+T*
+(**URI padrao:** `mongodb://localhost:27017` \(variavel `MONGO_URI`\)) Tj
+T*
+(**Modelo:** documentos \(NoSQL\) - nao ha tabelas relacionais; cada **colecao** agrupa) Tj
+T*
+(  documentos JSON.) Tj
+T*
+( ) Tj
+T*
+(---) Tj
+T*
+( ) Tj
+T*
+( ) Tj
+T*
+(Visao geral das colecoes) Tj
+T*
+( ) Tj
+T*
+(Colecao | Responsabilidade | Indice unico) Tj
+T*
+(`alunos` | Cadastro do aluno, historico de frequencia/nota e risco calculado | `matricula`) Tj
+T*
+(`alertas` | Eventos de mudanca de risco \(e e-mail em risco ALTO\) | `_id` \(ObjectId\)) Tj
+T*
+(`usuarios` | Contas de acesso \(coordenador, professor, aluno\) | `email`) Tj
+T*
+( ) Tj
+T*
+(---) Tj
+T*
+( ) Tj
+T*
+( ) Tj
+T*
+(1. Colecao `alunos`) Tj
+T*
+( ) Tj
+T*
+(Documento raiz do aluno. O historico fica embutido \(array\). O risco e recalculado a cada) Tj
+T*
+(  importacao/atualizacao.) Tj
+T*
+( ) Tj
+T*
+(Campos do documento) Tj
+T*
+( ) Tj
+T*
+(Campo | Tipo | Obrigatorio | Descricao) Tj
+T*
+(`_id` | ObjectId | sim \(auto\) | Identificador interno do MongoDB) Tj
+T*
+(`matricula` | String | sim | RA / matricula do aluno \(unica\)) Tj
+T*
+(`nome` | String | sim | Nome do aluno) Tj
+T*
+(`turma` | String | sim | Turma \(ex.: `8oA`\)) Tj
+T*
+(`historico` | Array de Document | sim | Lista de registros data/frequencia/nota) Tj
+T*
+(`risco` | Document | sim | Resultado da `CalculadoraRisco`) Tj
+T*
+( ) Tj
+T*
+(Subdocumento `historico[]`) Tj
+T*
+( ) Tj
+T*
+(Campo | Tipo | Obrigatorio | Descricao / dominio) Tj
+T*
+(`data` | String \(ISO `AAAA-MM-DD`\) | sim | Data do registro; precisa existir no calendario) Tj
+T*
+(`frequencia` | Number \(Double\) | sim | Frequencia em % - faixa **0 a 100**) Tj
+T*
+(`nota` | Number \(Double\) | sim | Nota - faixa **0 a 10**) Tj
+T*
+( ) Tj
+T*
+(Registros com a **mesma data** na mesma matricula sao substituidos \(upsert por data\).) Tj
+T*
+( ) Tj
+T*
+(Subdocumento `risco`) Tj
+T*
+( ) Tj
+T*
+(Campo | Tipo | Obrigatorio | Descricao / dominio) Tj
+T*
+(`nivel` | String | sim | `ALTO` \\ | `MEDIO` \\ | `BAIXO`) Tj
+T*
+(`pontuacao` | Integer | sim | Soma dos criterios \(0-7 no MVP\)) Tj
+T*
+(`frequenciaAtual` | Number | sim | Frequencia do registro mais recente) Tj
+T*
+(`notaAtual` | Number | sim | Nota do registro mais recente) Tj
+T*
+(`sinais` | Array de String | sim | Motivos textuais do score) Tj
+T*
+(`acoes` | Array de String | sim | Acoes recomendadas conforme o nivel) Tj
+T*
+(`calculadoEm` | Date | sim | Momento do calculo) Tj
+T*
+( ) Tj
+T*
+(Exemplo) Tj
+T*
+( ) Tj
+T*
+({) Tj
+T*
+(  "matricula": "2026001",) Tj
+T*
+(  "nome": "Joao P.",) Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Length 3003 >>
+stream
+BT
+/F1 9 Tf
+11 TL
+1 0 0 1 40 802 Tm
+(  "turma": "8oA",) Tj
+T*
+(  "historico": [) Tj
+T*
+(    { "data": "2026-08-01", "frequencia": 80.0, "nota": 6.5 },) Tj
+T*
+(    { "data": "2026-11-01", "frequencia": 62.0, "nota": 5.2 }) Tj
+T*
+(  ],) Tj
+T*
+(  "risco": {) Tj
+T*
+(    "nivel": "ALTO",) Tj
+T*
+(    "pontuacao": 5,) Tj
+T*
+(    "frequenciaAtual": 62.0,) Tj
+T*
+(    "notaAtual": 5.2,) Tj
+T*
+(    "sinais": ["Frequencia de 62%, abaixo do minimo de 75%"],) Tj
+T*
+(    "acoes": ["Acionar assistente social", "Contatar a familia com urgencia"],) Tj
+T*
+(    "calculadoEm": { "$date": "2026-11-22T00:00:00.000Z" }) Tj
+T*
+(  }) Tj
+T*
+(}) Tj
+T*
+( ) Tj
+T*
+(---) Tj
+T*
+( ) Tj
+T*
+( ) Tj
+T*
+(2. Colecao `alertas`) Tj
+T*
+( ) Tj
+T*
+(Gerados quando o nivel de risco **muda**. Em `NOVO_RISCO_ALTO`, o campo `email` guarda o) Tj
+T*
+(  resultado do `NotificadorEmail`.) Tj
+T*
+( ) Tj
+T*
+(Campo | Tipo | Obrigatorio | Descricao / dominio) Tj
+T*
+(`_id` | ObjectId | sim \(auto\) | ID interno) Tj
+T*
+(`id` | String | so na API | Hex do `_id` \(exposto na listagem\)) Tj
+T*
+(`tipo` | String | sim | `NOVO_RISCO_ALTO` \\ | `MUDANCA_NIVEL`) Tj
+T*
+(`matricula` | String | sim | Matricula do aluno) Tj
+T*
+(`nomeAluno` | String | sim | Nome no momento do alerta) Tj
+T*
+(`turma` | String | sim | Turma no momento do alerta) Tj
+T*
+(`nivelAnterior` | String \\ | null | nao | Nivel anterior \(`null` = aluno novo\)) Tj
+T*
+(`nivelNovo` | String | sim | `ALTO` \\ | `MEDIO` \\ | `BAIXO`) Tj
+T*
+(`titulo` | String | sim | Texto resumido do evento) Tj
+T*
+(`lido` | Boolean | sim | `false` ate marcar como lido) Tj
+T*
+(`criadoEm` | Date | sim | Data/hora de criacao) Tj
+T*
+(`email` | Document | so em ALTO | Status do envio \(ver abaixo\)) Tj
+T*
+( ) Tj
+T*
+(Subdocumento `email` \(quando tipo = `NOVO_RISCO_ALTO`\)) Tj
+T*
+( ) Tj
+T*
+(Campo | Tipo | Descricao) Tj
+T*
+(`destino` | String | Destinatario \(ex.: `EMAIL_COORDENADOR`\)) Tj
+T*
+(`assunto` | String | Assunto da mensagem) Tj
+T*
+(`corpo` | String | Corpo com sinais e acoes) Tj
+T*
+(`criadoEm` | Date | Momento da tentativa) Tj
+T*
+(`status` | String | `enviado` \\ | `copia_local` \\ | `falha`) Tj
+T*
+(`motivo` | String | Detalhe \(SMTP ausente, erro, etc.\)) Tj
+T*
+( ) Tj
+T*
+(---) Tj
+T*
+( ) Tj
+T*
+( ) Tj
+T*
+(3. Colecao `usuarios`) Tj
+T*
+( ) Tj
+T*
+(Autenticacao do painel. A senha **nunca** e devolvida pela API - so o hash fica no banco.) Tj
+T*
+( ) Tj
+T*
+(Campo | Tipo | Obrigatorio | Descricao / dominio) Tj
+T*
+(`_id` | ObjectId | sim \(auto\) | ID interno) Tj
+T*
+(`nome` | String | sim | Nome do usuario) Tj
+T*
+(`email` | String | sim | E-mail normalizado \(minusculo\), **unico**) Tj
+T*
+(`senhaHash` | String | sim | Hash da senha \(`SenhaHash`\)) Tj
+T*
+(`funcao` | String | sim | `coordenador` \\ | `professor` \\ | `aluno`) Tj
+T*
+(`criadoEm` | String \(ISO Instant\) | sim | Momento do cadastro) Tj
+T*
+( ) Tj
+T*
+(Resposta publica \(sem `senhaHash`\)) Tj
+T*
+( ) Tj
+T*
+({ "nome": "Coordenador", "email": "coordenador@escola.local", "funcao": "coordenador" }) Tj
+T*
+( ) Tj
+T*
+(---) Tj
+ET
+endstream
+endobj
+4 0 obj
+<< /Length 891 >>
+stream
+BT
+/F1 9 Tf
+11 TL
+1 0 0 1 40 802 Tm
+( ) Tj
+T*
+( ) Tj
+T*
+(4. Regras de negocio ligadas aos dados) Tj
+T*
+( ) Tj
+T*
+(Regra | Onde) Tj
+T*
+(Frequencia 0-100; nota 0-10; data `AAAA-MM-DD` valida | `ImportadorCsv`) Tj
+T*
+(Score: >=4 ALTO, 2-3 MEDIO, 0-1 BAIXO | `CalculadoraRisco`) Tj
+T*
+(Alerta + e-mail so em transicao para ALTO \(ou aluno novo ja ALTO\) | `AlertaRepositorio`) Tj
+T*
+(E-mail institucional para cadastro de coordenador/professor | `RegrasUsuario`) Tj
+T*
+( ) Tj
+T*
+(---) Tj
+T*
+( ) Tj
+T*
+( ) Tj
+T*
+(5. Relacionamentos \(logicos\)) Tj
+T*
+( ) Tj
+T*
+(MongoDB nao tem FK, mas o vinculo e:) Tj
+T*
+( ) Tj
+T*
+(usuarios  \(autenticacao - independente\)) Tj
+T*
+(alunos.matricula  <??  alertas.matricula) Tj
+T*
+( ) Tj
+T*
+(Um aluno tem N registros em `historico` e 0..N documentos em `alertas`.) Tj
+T*
+( ) Tj
+T*
+(---) Tj
+T*
+( ) Tj
+T*
+(*Documento gerado para entrega do PI IV - Time 23.*) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 595 842] /Contents 2 0 R /Resources << /Font << /F1 1 0 R >> >> >>
+endobj
+6 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 595 842] /Contents 3 0 R /Resources << /Font << /F1 1 0 R >> >> >>
+endobj
+7 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 1 0 R >> >> >>
+endobj
+8 0 obj
+<< /Type /Pages /Kids [5 0 R 6 0 R 7 0 R] /Count 3 >>
+endobj
+9 0 obj
+<< /Type /Catalog /Pages 8 0 R >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000077 00000 n 
+0000003178 00000 n 
+0000006233 00000 n 
+0000007175 00000 n 
+0000007301 00000 n 
+0000007427 00000 n 
+0000007553 00000 n 
+0000007622 00000 n 
+trailer
+<< /Size 10 /Root 9 0 R >>
+startxref
+7671
+%%EOF

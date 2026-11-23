@@ -19,9 +19,7 @@ import java.util.Date;
 import java.util.Properties;
 
 /**
- * Alerta por e-mail quando um aluno entra em risco ALTO.
- * Sem servidor SMTP configurado, grava a mensagem em logs/emails.log para a demonstração.
- *
+ * E-mail de alerta de risco ALTO. Sem SMTP, grava em logs/emails.log.
  * Variáveis: EMAIL_COORDENADOR, EMAIL_REMETENTE, SMTP_HOST, SMTP_PORT, SMTP_USUARIO, SMTP_SENHA.
  */
 public class NotificadorEmail {
