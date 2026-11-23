@@ -1,27 +1,35 @@
-import { api } from './api.js'
+// Autor: Cadu Spadari (também alterado por Arthur Zambroni)
+// Alterações: Lucas Canto — sessão com token do servidor, fim da conta de aluno, rotas novas
+//             (equipe e conta), aviso de senha temporária e atualização da sessão sem recarregar a página
+//
+// Controle de login no navegador. IMPORTANTE: aqui só decidimos o que MOSTRAR; quem garante a
+// segurança de verdade é o servidor, que confere o token e a função em todo pedido.
+import { api, CHAVE_SESSAO } from './api.js'
 
-const CHAVE = 'ew_sessao'
-
+// O aluno é beneficiário, não usuário do sistema (relatório, seção 2.1.3).
 export const FUNCOES = {
   coordenador: 'Coordenador',
   professor: 'Professor',
-  aluno: 'Aluno',
 }
 
 /** Funções que pedem senha institucional no cadastro. */
 export const FUNCOES_COM_SENHA_INSTITUCIONAL = ['coordenador', 'professor']
 
-/** O que cada função pode abrir no painel. */
+/**
+ * O que cada função pode abrir no painel. Isto só esconde telas: quem garante o acesso
+ * de verdade é o servidor, que confere o token e a função em todo pedido.
+ */
 export const PERMISSOES = {
-  coordenador: ['/', '/alertas', '/importar', '/alunos'],
-  professor: ['/', '/importar', '/alunos'],
-  aluno: ['/', '/alunos'],
+  coordenador: ['/', '/alertas', '/importar', '/alunos', '/equipe', '/conta'],
+  professor: ['/', '/importar', '/alunos', '/conta'],
 }
 
+/** Lê a sessão guardada no localStorage (ou null se não estiver logado). */
 export function sessaoAtual() {
   try {
-    const bruto = localStorage.getItem(CHAVE)
-    return bruto ? JSON.parse(bruto) : null
+    const bruto = localStorage.getItem(CHAVE_SESSAO)
+    const sessao = bruto ? JSON.parse(bruto) : null
+    return sessao?.token && FUNCOES[sessao.funcao] ? sessao : null
   } catch {
     return null
   }
@@ -39,16 +47,32 @@ export function podeAcessar(caminho) {
   return permitidos.includes(caminho)
 }
 
+/** Para onde mandar a pessoa depois do login (ou quando ela abre algo que não pode). */
+export function paginaInicial() {
+  return '/'
+}
+
+/** Guarda no navegador o que o servidor devolveu no login (inclusive o token). */
 function iniciarSessao(usuario) {
   const sessao = {
     email: usuario.email,
     nome: usuario.nome,
     funcao: usuario.funcao,
+    token: usuario.token,
+    senhaTemporaria: Boolean(usuario.senhaTemporaria),
     em: Date.now(),
   }
 
-  localStorage.setItem(CHAVE, JSON.stringify(sessao))
+  localStorage.setItem(CHAVE_SESSAO, JSON.stringify(sessao))
   return sessao
+}
+
+/** Atualiza dados da sessão guardada (ex.: nome trocado em Minha conta) e avisa a tela. */
+export function atualizarSessao(campos) {
+  const sessao = sessaoAtual()
+  if (!sessao) return
+  localStorage.setItem(CHAVE_SESSAO, JSON.stringify({ ...sessao, ...campos }))
+  window.dispatchEvent(new Event('sessao-atualizada'))
 }
 
 export async function entrar(email, senha) {
@@ -56,6 +80,10 @@ export async function entrar(email, senha) {
   return iniciarSessao(usuario)
 }
 
+/**
+ * Cadastro: as validações daqui são só para avisar rápido na tela; o servidor valida tudo de novo
+ * (nunca dá para confiar só no que vem do navegador).
+ */
 export async function cadastrar(dados) {
   const funcao = dados.funcao
   const nome = (dados.nome || '').trim()
@@ -80,11 +108,11 @@ export async function cadastrar(dados) {
   }
 
   if (senha !== dados.confirmarSenha) {
-    throw new Error('As senhas não conferem.')
+    throw new Error('As duas senhas não são iguais.')
   }
 
   if (FUNCOES_COM_SENHA_INSTITUCIONAL.includes(funcao) && !senhaInstitucional) {
-    throw new Error('Informe a senha institucional para cadastrar coordenador ou professor.')
+    throw new Error('Informe o código da escola.')
   }
 
   const usuario = await api.cadastrarUsuario({
@@ -99,5 +127,7 @@ export async function cadastrar(dados) {
 }
 
 export function sair() {
-  localStorage.removeItem(CHAVE)
+  // Avisa o servidor para invalidar o token; se falhar, o token expira sozinho.
+  api.encerrarSessao().catch(() => {})
+  localStorage.removeItem(CHAVE_SESSAO)
 }

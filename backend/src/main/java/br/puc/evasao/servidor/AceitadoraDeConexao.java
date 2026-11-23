@@ -1,13 +1,21 @@
 // Autor: Cadu Spadari
+// Alterações: Lucas Canto — o ServerSocket só aceita conexões da própria máquina (localhost)
 package br.puc.evasao.servidor;
 
 import br.puc.evasao.protocolo.Parceiro;
 
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
-/** Thread que aceita conexões Socket e abre uma supervisora para cada cliente. */
+/**
+ * Thread que aceita conexões Socket e abre uma supervisora para cada cliente.
+ *
+ * O accept() trava até alguém conectar; por isso ele roda numa thread própria e o main
+ * do Servidor fica livre para ler o teclado. Cada cliente novo ganha uma SupervisoraDeConexao
+ * (outra thread), então vários clientes podem ser atendidos ao mesmo tempo.
+ */
 public class AceitadoraDeConexao extends Thread {
 
     private final ServerSocket pedido;
@@ -27,7 +35,9 @@ public class AceitadoraDeConexao extends Thread {
         }
 
         try {
-            this.pedido = new ServerSocket(Integer.parseInt(porta));
+            // Só aceita conexões da própria máquina (a PonteHttp roda junto com o servidor).
+            // O 50 é o tamanho da fila de conexões esperando o accept.
+            this.pedido = new ServerSocket(Integer.parseInt(porta), 50, InetAddress.getLoopbackAddress());
         } catch (Exception e) {
             throw new Exception("Porta invalida");
         }
@@ -40,7 +50,7 @@ public class AceitadoraDeConexao extends Thread {
         for (;;) {
             Socket conexao;
             try {
-                conexao = pedido.accept();
+                conexao = pedido.accept(); // espera um cliente conectar
             } catch (Exception e) {
                 continue;
             }
@@ -51,7 +61,7 @@ public class AceitadoraDeConexao extends Thread {
             } catch (Exception ignored) {
             }
             if (supervisora != null) {
-                supervisora.start();
+                supervisora.start(); // cada cliente é atendido na sua própria thread
             }
         }
     }

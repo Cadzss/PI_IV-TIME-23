@@ -1,4 +1,10 @@
-/* Autor: Cadu Spadari — cores em :root para o painel e fallback se o Tailwind não gerar a classe */
+/* Autor: Cadu Spadari — cores em :root para o painel e fallback se o Tailwind não gerar a classe
+   Alterações: Lucas Canto — sombras e cantos arredondados, rótulos e botões novos, kpi-rotulo/kpi-valor,
+               align-content no .rotulo (alinha campos lado a lado) e fallback do vermelho de risco alto.
+
+   Como funciona: o Tailwind gera as classes utilitárias (bg-, text-, p-...) e aqui ficam as classes
+   "de componente" do projeto (.painel, .campo, .btn-primario...), para não repetir a mesma lista
+   de classes em toda tela. */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -16,6 +22,7 @@
 
 body {
   margin: 0;
+  -webkit-font-smoothing: antialiased;
   min-height: 100vh;
   background: var(--fundo);
   color: var(--tinta);
@@ -37,8 +44,9 @@ body {
 
 .painel {
   border: 1px solid var(--linha);
-  border-radius: 0.75rem;
+  border-radius: 1rem;
   background: #fff;
+  box-shadow: 0 1px 2px rgba(16, 42, 67, 0.04), 0 4px 16px rgba(16, 42, 67, 0.04);
 }
 
 .campo {
@@ -59,17 +67,21 @@ body {
 
 .rotulo {
   display: grid;
-  gap: 0.25rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: #64748b;
+  /* Conteúdo preso no topo: um campo com dica embaixo não estica o vizinho na mesma linha */
+  align-content: start;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #475569;
 }
 
 .btn-primario {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   border: 0;
-  border-radius: 0.5rem;
+  border-radius: 0.625rem;
   background: var(--tinta);
   padding: 0.625rem 1rem;
   font-size: 0.875rem;
@@ -78,7 +90,7 @@ body {
   cursor: pointer;
 }
 
-.btn-primario:hover {
+.btn-primario:hover:not(:disabled) {
   background: var(--acento);
 }
 
@@ -88,8 +100,12 @@ body {
 }
 
 .btn-secundario {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   border: 1px solid var(--linha);
-  border-radius: 0.5rem;
+  border-radius: 0.625rem;
   background: #fff;
   padding: 0.625rem 1rem;
   font-size: 0.875rem;
@@ -98,7 +114,7 @@ body {
   cursor: pointer;
 }
 
-.btn-secundario:hover {
+.btn-secundario:hover:not(:disabled) {
   border-color: var(--acento);
   color: var(--acento);
 }
@@ -110,9 +126,24 @@ body {
 
 .kpi {
   border: 1px solid var(--linha);
-  border-radius: 0.75rem;
+  border-radius: 1rem;
   background: #fff;
-  padding: 1rem;
+  padding: 1.125rem 1.25rem;
+  box-shadow: 0 1px 2px rgba(16, 42, 67, 0.04), 0 4px 16px rgba(16, 42, 67, 0.04);
+}
+
+.kpi-rotulo {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.kpi-valor {
+  margin-top: 0.375rem;
+  font-size: 1.875rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
 }
 
 .chip {
@@ -129,6 +160,7 @@ body {
 .bg-acento { background-color: var(--acento) !important; }
 .bg-fundo { background-color: var(--fundo) !important; }
 .bg-risco-alerta { background-color: var(--alerta) !important; }
+.bg-risco-alto { background-color: var(--alto) !important; }
 
 .text-tinta { color: var(--tinta) !important; }
 .text-acento { color: var(--acento) !important; }
@@ -141,9 +173,9 @@ body {
 .border-risco-alto { border-color: rgba(180, 35, 24, 0.4) !important; }
 .border-risco-baixo { border-color: rgba(2, 122, 72, 0.35) !important; }
 
-/* Lado escuro do login: contraste fixo para a banca */
+/* Lado escuro do login */
 .lado-login {
-  background: var(--tinta);
+  background: radial-gradient(120% 80% at 0% 0%, #1d4e6e 0%, var(--tinta) 55%);
   color: #ffffff;
   padding: 3rem 2.5rem;
 }

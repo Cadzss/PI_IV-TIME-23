@@ -1,3 +1,5 @@
+// Autor: Lucas Canto
+// (regra +4 para frequência < 75%, engajamento, textos em pt-BR e lista de ações: Lucas Canto)
 package br.puc.evasao.servidor;
 
 import org.bson.Document;
@@ -6,18 +8,22 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Cálculo do score de risco de evasão (regra simples do MVP):
  * faltas (frequência) + nota + queda de desempenho -> ALTO / MEDIO / BAIXO.
  *
  * Pontuação:
- *   frequência atual  < 75%  -> +3   (abaixo do mínimo legal)
+ *   frequência atual  < 75%  -> +4   (abaixo do mínimo legal: sozinha já leva a ALTO)
  *   frequência atual  < 85%  -> +1
  *   nota atual        < 5,0  -> +2
  *   nota atual        < 7,0  -> +1
  *   queda de nota     >= 1,0 ponto na janela analisada -> +1
  *   queda de frequência >= 10 p.p. na janela analisada -> +1
+ *   engajamento (opcional, quando a planilha traz):
+ *     atrasos no período >= 5 -> +1   (atrasos recorrentes)
+ *     atividades entregues < 50% -> +2 | < 75% -> +1   (ausência em atividades)
  *
  *   pontuação >= 4 -> ALTO | >= 2 -> MEDIO | senão BAIXO
  */
@@ -30,7 +36,28 @@ public class CalculadoraRisco {
     /** Quantos registros mais recentes do histórico entram na análise de queda. */
     private static final int JANELA = 3;
 
+    static final int LIMITE_ATRASOS = 5;
+
+    static final List<String> ACOES_ALTO = List.of(
+            "Acionar assistente social",
+            "Contatar a família com urgência",
+            "Agendar conversa individual com o aluno");
+    static final List<String> ACOES_MEDIO = List.of(
+            "Conversar com os professores da turma",
+            "Comunicar a família sobre a situação");
+    static final List<String> ACOES_BAIXO = List.of(
+            "Manter acompanhamento regular");
+
+    /** Todas as ações que o sistema pode recomendar (as providências só aceitam estas). */
+    public static final List<String> TODAS_AS_ACOES = juntar(ACOES_ALTO, ACOES_MEDIO, ACOES_BAIXO);
+
+    /**
+     * Recebe o histórico do aluno (um registro por data) e devolve o documento "risco":
+     * nível, pontuação, valores atuais, sinais (motivos em texto) e ações recomendadas.
+     */
     public Document calcular(List<Document> historico) {
+        // Copia antes de ordenar para não bagunçar a lista de quem chamou.
+        // As datas estão em AAAA-MM-DD, então ordem alfabética = ordem cronológica.
         List<Document> ordenado = new ArrayList<>(historico);
         ordenado.sort(Comparator.comparing(r -> r.getString("data")));
 
@@ -38,71 +65,103 @@ public class CalculadoraRisco {
         int pontos = 0;
         double freqAtual = 0;
         double notaAtual = 0;
+        Document engajamento = new Document();
 
         if (!ordenado.isEmpty()) {
+            // "atual" = registro mais recente; "inicioJanela" = o mais antigo dos últimos 3,
+            // usado para medir se a nota/frequência caiu
             Document atual = ordenado.get(ordenado.size() - 1);
             Document inicioJanela = ordenado.get(Math.max(0, ordenado.size() - JANELA));
             freqAtual = numero(atual, "frequencia");
             notaAtual = numero(atual, "nota");
 
             if (freqAtual < 75) {
-                pontos += 3;
-                sinais.add(String.format("Frequência de %.0f%%, abaixo do mínimo de 75%%", freqAtual));
+                pontos += 4;
+                sinais.add(texto("Frequência de %.0f%%, abaixo do mínimo de 75%%", freqAtual));
             } else if (freqAtual < 85) {
                 pontos += 1;
-                sinais.add(String.format("Frequência de %.0f%%, em zona de atenção", freqAtual));
+                sinais.add(texto("Frequência de %.0f%%, perto do limite", freqAtual));
             }
 
             if (notaAtual < 5) {
                 pontos += 2;
-                sinais.add(String.format("Nota média de %.1f, abaixo de 5,0", notaAtual));
+                sinais.add(texto("Nota %.1f, abaixo de 5,0", notaAtual));
             } else if (notaAtual < 7) {
                 pontos += 1;
-                sinais.add(String.format("Nota média de %.1f, abaixo de 7,0", notaAtual));
+                sinais.add(texto("Nota %.1f, abaixo de 7,0", notaAtual));
             }
 
             double quedaNota = numero(inicioJanela, "nota") - notaAtual;
             if (quedaNota >= 1.0) {
                 pontos += 1;
-                sinais.add(String.format("Queda de %.1f ponto(s) na nota nos últimos registros", quedaNota));
+                sinais.add(texto("A nota caiu %.1f ponto(s) nos últimos meses", quedaNota));
             }
 
             double quedaFreq = numero(inicioJanela, "frequencia") - freqAtual;
             if (quedaFreq >= 10) {
                 pontos += 1;
-                sinais.add(String.format("Queda de %.0f p.p. na frequência nos últimos registros", quedaFreq));
+                sinais.add(texto("A frequência caiu %.0f%% nos últimos meses", quedaFreq));
+            }
+
+            // Engajamento: só conta quando a planilha trouxe essas colunas
+            Object atrasos = atual.get(ImportadorCsv.ATRASOS);
+            if (atrasos instanceof Number) engajamento.append("atrasosAtual", atrasos);
+            if (atrasos instanceof Number && ((Number) atrasos).intValue() >= LIMITE_ATRASOS) {
+                pontos += 1;
+                sinais.add(texto("Chegou atrasado %.0f vezes no último período", ((Number) atrasos).doubleValue()));
+            }
+            Object atividades = atual.get(ImportadorCsv.ATIVIDADES);
+            if (atividades instanceof Number) {
+                engajamento.append("atividadesAtual", atividades);
+                double entregues = ((Number) atividades).doubleValue();
+                if (entregues < 50) {
+                    pontos += 2;
+                    sinais.add(texto("Entregou só %.0f%% das atividades", entregues));
+                } else if (entregues < 75) {
+                    pontos += 1;
+                    sinais.add(texto("Entregou %.0f%% das atividades, abaixo do esperado", entregues));
+                }
             }
         }
 
+        // Classificação final: 4+ pontos = ALTO, 2 ou 3 = MÉDIO, 0 ou 1 = BAIXO
         String nivel = pontos >= 4 ? ALTO : pontos >= 2 ? MEDIO : BAIXO;
 
-        return new Document("nivel", nivel)
+        Document risco = new Document("nivel", nivel)
                 .append("pontuacao", pontos)
                 .append("frequenciaAtual", freqAtual)
-                .append("notaAtual", notaAtual)
+                .append("notaAtual", notaAtual);
+        risco.putAll(engajamento); // só entra se a planilha trouxe atrasos/atividades
+        return risco
                 .append("sinais", sinais)
                 .append("acoes", acoesRecomendadas(nivel))
                 .append("calculadoEm", new Date());
     }
 
     private List<String> acoesRecomendadas(String nivel) {
-        List<String> acoes = new ArrayList<>();
         switch (nivel) {
             case ALTO:
-                acoes.add("Acionar assistente social");
-                acoes.add("Contatar a família com urgência");
-                acoes.add("Agendar conversa individual com o aluno");
-                break;
+                return new ArrayList<>(ACOES_ALTO);
             case MEDIO:
-                acoes.add("Conversar com os professores da turma");
-                acoes.add("Comunicar a família sobre a situação");
-                break;
+                return new ArrayList<>(ACOES_MEDIO);
             default:
-                acoes.add("Manter acompanhamento regular");
+                return new ArrayList<>(ACOES_BAIXO);
         }
-        return acoes;
     }
 
+    @SafeVarargs
+    private static List<String> juntar(List<String>... listas) {
+        List<String> todas = new ArrayList<>();
+        for (List<String> l : listas) todas.addAll(l);
+        return List.copyOf(todas);
+    }
+
+    /** Texto com número no formato brasileiro (vírgula decimal). */
+    private static String texto(String modelo, double valor) {
+        return String.format(new Locale("pt", "BR"), modelo, valor);
+    }
+
+    /** Lê um campo numérico do registro (Integer ou Double); se não existir, vale 0. */
     private static double numero(Document d, String campo) {
         Object v = d.get(campo);
         return v instanceof Number ? ((Number) v).doubleValue() : 0;

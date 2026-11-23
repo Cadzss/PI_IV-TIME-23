@@ -1,4 +1,5 @@
 // Autor: Cadu Spadari
+// Alterações: Lucas Canto — método destino() usado para gravar o aviso como "pendente" antes do envio
 package br.puc.evasao.servidor;
 
 import jakarta.mail.Authenticator;
@@ -24,14 +25,20 @@ import java.util.Properties;
  */
 public class NotificadorEmail {
 
+    /** Quem recebe os alertas. */
+    public static String destino() {
+        return getenv("EMAIL_COORDENADOR", "coordenador@escola.local");
+    }
+
     public Document notificar(String assunto, String corpo) {
-        String destino = getenv("EMAIL_COORDENADOR", "coordenador@escola.local");
+        String destino = destino();
         String host = getenv("SMTP_HOST", "");
         Document email = new Document("destino", destino)
                 .append("assunto", assunto)
                 .append("corpo", corpo)
                 .append("criadoEm", new Date());
 
+        // Sem servidor SMTP configurado (caso da demonstração): não envia, só grava uma cópia no log
         if (host.isEmpty()) {
             gravarCopia(destino, assunto, corpo, "SMTP não configurado");
             return email.append("status", "copia_local")
@@ -57,7 +64,7 @@ public class NotificadorEmail {
         props.put("mail.smtp.host", host);
         props.put("mail.smtp.port", porta);
         props.put("mail.smtp.auth", usuario.isEmpty() ? "false" : "true");
-        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.starttls.enable", "true"); // conexão criptografada com o servidor de e-mail
         props.put("mail.smtp.connectiontimeout", "8000");
         props.put("mail.smtp.timeout", "8000");
 
@@ -78,6 +85,7 @@ public class NotificadorEmail {
         Transport.send(mensagem);
     }
 
+    // synchronized: a fila de e-mails e outras threads podem escrever no mesmo arquivo ao mesmo tempo
     private static synchronized void gravarCopia(String destino, String assunto, String corpo, String status) {
         try {
             Path arquivo = Paths.get("logs", "emails.log");
