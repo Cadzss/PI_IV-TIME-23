@@ -1,3 +1,5 @@
+// Autor: Lucas Canto
+// (também apaga as providências e espera os e-mails da fila antes de fechar: Lucas Canto)
 package br.puc.evasao.servidor;
 
 import java.io.IOException;
@@ -22,6 +24,7 @@ public class PopularBanco {
         String cabecalho = linhas.get(0);
         int colData = List.of(cabecalho.split(",")).indexOf("data");
 
+        // TreeSet = conjunto ordenado: pega as datas distintas da planilha já em ordem
         TreeSet<String> datas = new TreeSet<>();
         for (String l : linhas.subList(1, linhas.size())) {
             if (!l.isBlank()) datas.add(l.split(",")[colData]);
@@ -30,6 +33,7 @@ public class PopularBanco {
         Banco banco = new Banco();
         banco.getDatabase().getCollection("alunos").drop();
         banco.getDatabase().getCollection("alertas").drop();
+        banco.getDatabase().getCollection("providencias").drop();
 
         AlunoRepositorio alunos = new AlunoRepositorio(banco);
         AlertaRepositorio alertas = new AlertaRepositorio(banco);
@@ -47,6 +51,7 @@ public class PopularBanco {
 
         System.out.println("[Popular] Alunos: " + alunos.listar(null, null).size()
                 + " | Alertas: " + alertas.listar().size());
+        alertas.aguardarEmails();
         banco.fechar();
     }
 }

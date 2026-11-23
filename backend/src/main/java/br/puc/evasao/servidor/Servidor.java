@@ -1,4 +1,6 @@
 // Autor: Cadu Spadari
+// Alterações: Lucas Canto — monta o ProcessadorPedidos com os repositórios novos (providências)
+//             e espera a fila de e-mails terminar antes de desligar
 package br.puc.evasao.servidor;
 
 import java.util.ArrayList;
@@ -9,6 +11,9 @@ import br.puc.evasao.protocolo.Parceiro;
 /**
  * Servidor principal: a AceitadoraDeConexao aceita os clientes e cada um é atendido
  * por uma SupervisoraDeConexao. Toda a regra de negócio e o acesso ao MongoDB ficam deste lado.
+ *
+ * Este main segue quase igual ao exemplo do professor (até o jeito de escrever as chaves):
+ * sobe a thread que aceita conexões e fica lendo comandos do teclado até alguém digitar "desativar".
  */
 public class Servidor
 {
@@ -27,23 +32,28 @@ public class Servidor
         if (args.length==1)
             porta = args[0];
 
+        // Lista dos clientes conectados (cada um é um Parceiro). É compartilhada entre as
+        // threads, por isso todo acesso a ela é feito dentro de synchronized (usuarios)
         ArrayList<Parceiro> usuarios =
         new ArrayList<Parceiro> ();
 
+        // Monta as peças da regra de negócio: conexão com o banco + repositórios + processador
         Banco banco = new Banco();
         UsuarioRepositorio usuarioRepositorio = new UsuarioRepositorio(banco);
-        usuarioRepositorio.garantirContasDemo();
+        usuarioRepositorio.garantirContasDemo(); // cria coordenador/professor de demonstração se não existirem
+        AlertaRepositorio alertaRepositorio = new AlertaRepositorio(banco);
         ProcessadorPedidos processador = new ProcessadorPedidos(
                 new AlunoRepositorio(banco),
-                new AlertaRepositorio(banco),
-                usuarioRepositorio);
+                alertaRepositorio,
+                usuarioRepositorio,
+                new ProvidenciaRepositorio(banco));
 
         AceitadoraDeConexao aceitadoraDeConexao=null;
         try
         {
             aceitadoraDeConexao =
             new AceitadoraDeConexao (porta, usuarios, processador);
-            aceitadoraDeConexao.start();
+            aceitadoraDeConexao.start(); // thread que fica no accept() esperando clientes
         }
         catch (Exception erro)
         {
@@ -82,6 +92,7 @@ public class Servidor
 
             if (comando.toLowerCase().equals("desativar"))
             {
+                // Avisa todos os clientes conectados que o servidor vai cair e fecha cada conexão
                 synchronized (usuarios)
                 {
                     ComunicadoDeDesligamento comunicadoDeDesligamento =
@@ -99,6 +110,7 @@ public class Servidor
                     }
                 }
 
+                alertaRepositorio.aguardarEmails(); // não perde e-mail que ainda estava na fila
                 banco.fechar();
                 System.out.println ("O servidor foi desativado!\n");
                 System.exit(0);

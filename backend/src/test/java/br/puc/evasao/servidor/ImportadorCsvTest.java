@@ -1,5 +1,12 @@
 // Autor: Cadu Spadari
+// Alterações: Lucas Canto — avisos de nome/turma, colunas opcionais, data dd/mm/aaaa, cabeçalho com acento
+//             e validação do lançamento digitado na tela
 package br.puc.evasao.servidor;
+
+/*
+ * Testes da leitura da planilha. Usamos o método analisar(), que só lê e valida (não grava
+ * no MongoDB), então dá para testar com textos CSV montados aqui mesmo.
+ */
 
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
@@ -62,7 +69,7 @@ class ImportadorCsvTest {
     @Test
     void rejeitaDataInvalidaEPlanilhaVazia() {
         ImportadorCsv.Analise analise = ImportadorCsv.analisar(
-                CABECALHO + "2026001,Ana,8ºA,01/11/2026,80,6\n");
+                CABECALHO + "2026001,Ana,8ºA,2026/11/01,80,6\n");
         assertEquals(0, analise.registros);
         assertTrue(analise.erros.get(0).contains("data"));
 
@@ -113,6 +120,79 @@ class ImportadorCsvTest {
         assertTrue(analise.erros.isEmpty());
         List<Document> registros = analise.porAluno.get("2026001").getList("registros", Document.class);
         assertEquals(2, registros.size());
+    }
+
+    @Test
+    void avisaQuandoAMesmaMatriculaApareceComNomeOuTurmaDiferente() {
+        ImportadorCsv.Analise analise = ImportadorCsv.analisar(
+                CABECALHO
+                        + "2026001,Carlos,8A,2026-10-01,90,8.5\n"
+                        + "2026001,Carla,8B,2026-11-01,75,6.0\n");
+        assertEquals(2, analise.registros);
+        assertTrue(analise.erros.isEmpty());
+        assertEquals(2, analise.avisos.size());
+        assertTrue(analise.avisos.get(0).contains("nome"));
+        assertTrue(analise.avisos.get(1).contains("turma"));
+        assertEquals("Carlos", analise.porAluno.get("2026001").getString("nome"));
+    }
+
+    @Test
+    void lePlanilhaComColunasDeEngajamentoOpcionais() {
+        ImportadorCsv.Analise analise = ImportadorCsv.analisar(
+                "matricula,nome,turma,data,frequencia,nota,atrasos,atividades\n"
+                        + "2026001,Ana,8A,2026-11-01,80,6,3,70%\n"
+                        + "2026002,Bia,8A,2026-11-01,90,8,,\n");
+        assertTrue(analise.erros.isEmpty());
+        Document ana = analise.porAluno.get("2026001").getList("registros", Document.class).get(0);
+        assertEquals(3, ana.getInteger("atrasos"));
+        assertEquals(70.0, ana.getDouble("atividades"));
+        Document bia = analise.porAluno.get("2026002").getList("registros", Document.class).get(0);
+        assertTrue(!bia.containsKey("atrasos") && !bia.containsKey("atividades"));
+    }
+
+    @Test
+    void recusaAtrasosEAtividadesInvalidos() {
+        ImportadorCsv.Analise analise = ImportadorCsv.analisar(
+                "matricula,nome,turma,data,frequencia,nota,atrasos,atividades\n"
+                        + "2026001,Ana,8A,2026-11-01,80,6,-1,70\n"
+                        + "2026002,Bia,8A,2026-11-01,80,6,2.5,70\n"
+                        + "2026003,Caio,8A,2026-11-01,80,6,1,120\n");
+        assertEquals(0, analise.registros);
+        assertEquals(3, analise.erros.size());
+        assertTrue(analise.erros.get(0).contains("atrasos"));
+        assertTrue(analise.erros.get(2).contains("atividades"));
+    }
+
+    @Test
+    void aceitaDataNoFormatoBrasileiroEGuardaComoAnoMesDia() {
+        ImportadorCsv.Analise analise = ImportadorCsv.analisar(
+                CABECALHO + "2026001,Ana,8A,01/11/2026,80,6\n" + "2026002,Bia,8A,1/2/2026,80,6\n"
+                        + "2026003,Caio,8A,31/02/2026,80,6\n");
+        assertEquals(2, analise.registros);
+        assertEquals("2026-11-01", analise.porAluno.get("2026001").getList("registros", Document.class).get(0).getString("data"));
+        assertEquals("2026-02-01", analise.porAluno.get("2026002").getList("registros", Document.class).get(0).getString("data"));
+        assertEquals(1, analise.erros.size());
+        assertTrue(analise.erros.get(0).contains("31/02/2026"));
+    }
+
+    @Test
+    void cabecalhoAceitaAcentosEMaiusculas() {
+        ImportadorCsv.Analise analise = ImportadorCsv.analisar(
+                "Matrícula;Nome;Turma;Data;Frequência;Nota;Atrasos;Atividades\n"
+                        + "2026001;Ana;8A;01/11/2026;80;6,5;2;90\n");
+        assertTrue(analise.erros.isEmpty());
+        assertEquals(1, analise.registros);
+    }
+
+    @Test
+    void montarRegistroValidaOLancamentoDaTela() {
+        Document r = ImportadorCsv.montarRegistro("05/11/2026", 88, 7.5, 2.0, null);
+        assertEquals("2026-11-05", r.getString("data"));
+        assertEquals(2, r.getInteger("atrasos"));
+        assertTrue(!r.containsKey("atividades"));
+        assertThrows(IllegalArgumentException.class, () -> ImportadorCsv.montarRegistro("2026-11-05", 101, 7, null, null));
+        assertThrows(IllegalArgumentException.class, () -> ImportadorCsv.montarRegistro("2026-11-05", 90, 7, 1.5, null));
+        assertThrows(IllegalArgumentException.class, () -> ImportadorCsv.montarRegistro("ontem", 90, 7, null, null));
     }
 
     @Test
